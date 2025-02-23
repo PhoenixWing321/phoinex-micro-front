@@ -1,54 +1,53 @@
 <template>
-  <div class="container">
-    <!-- 计数器应用 -->
-    <div class="left-panel">
-      <WujieVue
-        width="100%"
-        height="100%"
-        name="counter-app"
-        url="http://localhost:8081"
-        :sync="true"
-      />
-    </div>
-    
-    <!-- 对话框应用 -->
-    <div class="right-panel">
-      <WujieVue
-        width="100%"
-        height="100%"
-        name="dialog-app"
-        url="http://localhost:8082"
-        :sync="true"
-      />
+  <div class="home">
+    <div class="welcome-content">
+      <img src="@/assets/logo.png" class="welcome-logo" />
+      <h1>欢迎使用微前端示例</h1>
+      <p>请从左侧菜单选择要打开的应用</p>
     </div>
   </div>
 </template>
 
 <script lang="ts">
 import { defineComponent } from "vue";
-import WujieVue from "wujie-vue3";
 
 export default defineComponent({
-  name: "HomeView",
-  components: {
-    WujieVue,
-  },
+  name: "HomeView"
 });
 </script>
 
 <style scoped>
-.container {
+.home {
+  height: 100%;
   display: flex;
-  width: 100%;
-  height: 100vh;
+  align-items: center;
+  justify-content: center;
+  background-color: #f0f2f5;
 }
 
-.left-panel {
-  width: 50%;
-  border-right: 1px solid #ddd;
+.welcome-content {
+  text-align: center;
+  padding: 40px;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
 }
 
-.right-panel {
-  width: 50%;
+.welcome-logo {
+  width: 80px;
+  height: 80px;
+  margin-bottom: 24px;
+}
+
+h1 {
+  font-size: 28px;
+  color: #303133;
+  margin-bottom: 16px;
+}
+
+p {
+  font-size: 16px;
+  color: #606266;
+  margin: 0;
 }
 </style>
