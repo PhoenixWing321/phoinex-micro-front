@@ -24,16 +24,14 @@
   </div>
 </template>
 
-<script lang="ts">
-import { defineComponent } from "vue";
+<script>
 import WujieVue from "wujie-vue3";
 
-export default defineComponent({
-  name: "HomeView",
+export default {
   components: {
-    WujieVue,
-  },
-});
+    WujieVue
+  }
+}
 </script>
 
 <style scoped>
@@ -51,4 +49,4 @@ export default defineComponent({
 .right-panel {
   width: 50%;
 }
-</style>
+</style> 
