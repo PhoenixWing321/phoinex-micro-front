@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="app-container">
     <!-- 原有的计数器组件 -->
     <CounterComponent />
     
@@ -21,12 +21,23 @@ export default {
 }
 </script>
 
-<style scoped>
-.left-app {
+<style>
+.app-container {
+  max-width: 1200px;
+  margin: 0 auto;
   padding: 20px;
+  box-sizing: border-box;
 }
 
-.content {
-  margin-top: 20px;
+/* 确保所有元素使用 border-box */
+* {
+  box-sizing: border-box;
+}
+
+/* 添加响应式布局 */
+@media (max-width: 768px) {
+  .app-container {
+    padding: 10px;
+  }
 }
 </style>

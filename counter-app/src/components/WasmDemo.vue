@@ -2,18 +2,22 @@
   <div class="wasm-demo">
     <h2>Rust WebAssembly 演示</h2>
     
-    <div>
+    <div class="calc-section">
       <h3>加法计算</h3>
-      <input type="number" v-model="num1">
-      <input type="number" v-model="num2">
-      <button @click="calculateAdd">计算</button>
+      <div class="input-group">
+        <input type="number" v-model="num1">
+        <input type="number" v-model="num2">
+        <button @click="calculateAdd">计算</button>
+      </div>
       <div class="result">{{ addResult }}</div>
     </div>
 
-    <div style="margin-top: 20px;">
+    <div class="calc-section">
       <h3>斐波那契数列</h3>
-      <input type="number" v-model="fibNum">
-      <button @click="calculateFib">计算</button>
+      <div class="input-group">
+        <input type="number" v-model="fibNum">
+        <button @click="calculateFib">计算</button>
+      </div>
       <div class="result">{{ fibResult }}</div>
     </div>
   </div>
@@ -74,26 +78,60 @@ export default {
 
 <style scoped>
 .wasm-demo {
-  margin-top: 30px;
+  max-width: 800px;
+  margin: 20px auto;
   padding: 20px;
   border: 1px solid #ddd;
   border-radius: 8px;
+  box-sizing: border-box;
+}
+
+.calc-section {
+  margin-bottom: 20px;
+}
+
+.input-group {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+input[type="number"] {
+  width: 120px;
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+button {
+  padding: 8px 16px;
+  background-color: #409eff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+button:hover {
+  background-color: #66b1ff;
 }
 
 .result {
   margin-top: 10px;
   padding: 10px;
-  background-color: #f0f0f0;
+  background-color: #f5f7fa;
   border-radius: 4px;
+  word-break: break-all;
 }
 
-input[type="number"] {
-  margin-right: 10px;
-  padding: 5px;
+h2 {
+  margin-bottom: 20px;
+  color: #303133;
 }
 
-button {
-  padding: 5px 15px;
-  cursor: pointer;
+h3 {
+  color: #606266;
+  margin-bottom: 15px;
 }
 </style> 
