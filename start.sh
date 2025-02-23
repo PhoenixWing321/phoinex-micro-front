@@ -1,11 +1,11 @@
 #!/bin/bash
 echo "Starting micro-frontend applications..."
 
-# 启动左侧子应用
-cd left-app && npm run serve &
+# 启动计数器应用
+cd counter-app && npm run serve &
 
-# 启动右侧子应用
-cd ../right-app && npm run serve &
+# 启动对话框应用
+cd ../dialog-app && npm run serve &
 
 # 启动主应用
 cd .. && npm run serve &

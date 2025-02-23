@@ -1,9 +1,9 @@
 {
-  "name": "left-app",
+  "name": "dialog-app",
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "serve": "vue-cli-service serve --port 8081"
+    "serve": "vue-cli-service serve --port 8082"
   },
   "dependencies": {
     "vue": "^3.2.0",

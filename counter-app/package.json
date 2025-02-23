@@ -1,9 +1,9 @@
 {
-  "name": "right-app",
+  "name": "app-counter",
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "serve": "vue-cli-service serve --port 8082"
+    "serve": "vue-cli-service serve --port 8081"
   },
   "dependencies": {
     "vue": "^3.2.0",

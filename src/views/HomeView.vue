@@ -1,22 +1,22 @@
 <template>
   <div class="container">
-    <!-- 左侧子应用 -->
+    <!-- 计数器应用 -->
     <div class="left-panel">
       <WujieVue
         width="100%"
         height="100%"
-        name="left-app"
+        name="counter-app"
         url="http://localhost:8081"
         :sync="true"
       />
     </div>
     
-    <!-- 右侧子应用 -->
+    <!-- 对话框应用 -->
     <div class="right-panel">
       <WujieVue
         width="100%"
         height="100%"
-        name="right-app"
+        name="dialog-app"
         url="http://localhost:8082"
         :sync="true"
       />

@@ -1,6 +1,6 @@
 <template>
   <div class="left-app">
-    <h2>左侧应用</h2>
+    <h2>计数器 - 应用</h2>
     <div class="content">
       <el-button type="primary" @click="count++">计数: {{ count }}</el-button>
     </div>
