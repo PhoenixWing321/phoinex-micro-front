@@ -15,7 +15,7 @@
           </el-icon>
         </div>
         <el-menu :collapse="isCollapsed">
-          <el-menu-item v-for="app in microApps" :key="app.name" @click="openApp(app, true)">
+          <el-menu-item v-for="app in microApps" :key="app.name" @click="() => openApp(app)">
             <el-icon>
               <component :is="app.icon" />
             </el-icon>
@@ -27,7 +27,7 @@
       <!-- 下半部分：运行中的应用列表 -->
       <CollapsibleGroup v-if="!isCollapsed" title="运行中的应用">
         <el-menu class="running-apps-menu">
-          <el-menu-item v-for="app in activeApps" :key="app.instanceId" @click="focusApp(app)"
+          <el-menu-item v-for="app in activeApps" :key="app.instanceId" @click="() => focusApp(app)"
             :class="{ 'is-minimized': app.isMinimized }">
             <div class="menu-item-content">
               <div class="app-info">
@@ -38,7 +38,7 @@
                   {{ app.title }}{{ app.instanceId > 1 ? '.' + app.instanceId : '.1' }}
                 </span>
               </div>
-              <el-button type="text" class="close-button" @click.stop="closeApp(app)">
+              <el-button link class="close-button" @click.stop="closeApp(app)">
                 <el-icon>
                   <Close />
                 </el-icon>
@@ -71,17 +71,17 @@
           </span>
           <div class="window-controls">
             <el-button-group class="control-buttons">
-              <el-button type="text" @click="minimizeApp(app)" :class="{ 'is-active': app.isMinimized }">
+              <el-button link @click="minimizeApp(app)" :class="{ 'is-active': app.isMinimized }">
                 <el-icon>
                   <Minus />
                 </el-icon>
               </el-button>
-              <el-button type="text" @click="maximizeApp(app)" :class="{ 'is-active': app.isMaximized }">
+              <el-button link @click="maximizeApp(app)" :class="{ 'is-active': app.isMaximized }">
                 <el-icon>
                   <component :is="app.isMaximized ? 'CopyDocument' : 'FullScreen'" />
                 </el-icon>
               </el-button>
-              <el-button type="text" @click="closeApp(app)">
+              <el-button link @click="closeApp(app)">
                 <el-icon>
                   <Close />
                 </el-icon>

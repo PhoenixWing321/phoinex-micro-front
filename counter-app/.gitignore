@@ -1,0 +1,3 @@
+# Wasm files
+src/assets/wasm/*
+!src/assets/wasm/.gitkeep 

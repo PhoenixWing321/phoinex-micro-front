@@ -1,44 +1,51 @@
 <template>
-  <div class="left-app">
-    <h2>计数器 - 应用</h2>
-    <div class="content">
-      <el-button type="primary" @click="increment">计数: {{ count }}</el-button>
-    </div>
+  <div class="app-container">
+    <!-- 原有的计数器组件 -->
+    <CounterComponent />
+
+    <!-- WebAssembly 演示组件 -->
+    <WasmDemo />
   </div>
 </template>
 
 <script>
-import { ref, onMounted } from 'vue'
+import CounterComponent from './components/Counter.vue'
+import WasmDemo from './components/WasmDemo.vue'
 
 export default {
-  name: 'CounterApp',
-  setup() {
-    const count = ref(0)
-
-    const increment = () => {
-      count.value++
-    }
-
-    onMounted(() => {
-      const instanceId = window.$wujie?.props.instanceId
-      const appName = window.$wujie?.props.appName
-      console.log('Instance:', instanceId, 'App:', appName)
-    })
-
-    return {
-      count,
-      increment
-    }
+  name: 'App',
+  components: {
+    CounterComponent,
+    WasmDemo
   }
 }
 </script>
 
-<style scoped>
-.left-app {
+<style>
+.app-container {
+  max-width: 1200px;
+  margin: 0 auto;
   padding: 20px;
+  box-sizing: border-box;
+  height: 100%;
+  overflow-y: auto;
 }
 
-.content {
-  margin-top: 20px;
+/* 确保所有元素使用 border-box */
+* {
+  box-sizing: border-box;
+}
+
+/* 添加响应式布局 */
+@media (max-width: 768px) {
+  .app-container {
+    padding: 10px;
+  }
+}
+
+/* 全局样式 */
+#app {
+  height: 100vh;
+  overflow-y: auto;
 }
 </style>
