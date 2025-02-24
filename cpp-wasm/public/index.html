@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebAssembly 测试</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .result {
+            margin-top: 10px;
+            padding: 10px;
+            background-color: #f5f5f5;
+            border-radius: 3px;
+        }
+        button {
+            padding: 8px 15px;
+            margin: 5px;
+            cursor: pointer;
+        }
+        input {
+            padding: 5px;
+            margin: 5px;
+            width: 60px;
+        }
+    </style>
+</head>
+<body>
+    <h1>WebAssembly 函数测试</h1>
+
+    <div class="test-section">
+        <h2>加法测试</h2>
+        <div>
+            <input type="number" id="num1" value="5"> +
+            <input type="number" id="num2" value="3">
+            <button onclick="testAdd()">计算</button>
+            <div id="addResult" class="result">结果将显示在这里</div>
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h2>斐波那契数列测试</h2>
+        <div>
+            <input type="number" id="fibNum" value="10">
+            <button onclick="testFibonacci()">计算</button>
+            <div id="fibResult" class="result">结果将显示在这里</div>
+        </div>
+    </div>
+
+    <script src="main.js"></script>
+    <script>
+        // 等待 WebAssembly 模块加载完成
+        Module.onRuntimeInitialized = function() {
+            console.log('WebAssembly 模块已加载');
+        };
+
+        function testAdd() {
+            const num1 = parseInt(document.getElementById('num1').value);
+            const num2 = parseInt(document.getElementById('num2').value);
+            const result = Module.add(num1, num2);
+            document.getElementById('addResult').textContent = 
+                `${num1} + ${num2} = ${result}`;
+        }
+
+        function testFibonacci() {
+            const num = parseInt(document.getElementById('fibNum').value);
+            const result = Module.fibonacci(num);
+            document.getElementById('fibResult').textContent = 
+                `斐波那契数列第 ${num} 项 = ${result}`;
+        }
+    </script>
+</body>
+</html> 

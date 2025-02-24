@@ -22,3 +22,9 @@ pnpm-debug.log*
 *.sln
 *.sw?
 target/
+
+# 编辑器文件
+.vscode/
+.idea/
+build/
+# cpp-wasm/build/
