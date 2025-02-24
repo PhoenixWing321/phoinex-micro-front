@@ -4,12 +4,24 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WebAssembly 测试</title>
+    <link rel="stylesheet" href="/shared-styles.css">
     <style>
         body {
             font-family: Arial, sans-serif;
             max-width: 800px;
             margin: 0 auto;
             padding: 20px;
+            max-height: 100vh;
+            overflow-y: auto;
+            box-sizing: border-box;
+        }
+        * {
+            box-sizing: border-box;
+        }
+        .container {
+            height: calc(100vh - 40px);
+            overflow-y: auto;
+            padding-right: 10px;
         }
         .test-section {
             margin: 20px 0;
@@ -33,28 +45,44 @@
             margin: 5px;
             width: 60px;
         }
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
     </style>
 </head>
 <body>
-    <h1>C++ WebAssembly 函数测试</h1>
-    <a href="rust.html"> 进入 Rust版本</a>
+    <div class="container">
+        <h1>C++ WebAssembly 函数测试</h1>
+        <a href="rust.html">进入 Rust版本</a>
 
-    <div class="test-section">
-        <h2>加法测试</h2>
-        <div>
-            <input type="number" id="num1" value="5"> +
-            <input type="number" id="num2" value="3">
-            <button onclick="testAdd()">计算</button>
-            <div id="addResult" class="result">结果将显示在这里</div>
+        <div class="test-section">
+            <h2>加法测试</h2>
+            <div>
+                <input type="number" id="num1" value="5"> +
+                <input type="number" id="num2" value="3">
+                <button onclick="testAdd()">计算</button>
+                <div id="addResult" class="result">结果将显示在这里</div>
+            </div>
         </div>
-    </div>
 
-    <div class="test-section">
-        <h2>斐波那契数列测试</h2>
-        <div>
-            <input type="number" id="fibNum" value="10">
-            <button onclick="testFibonacci()">计算</button>
-            <div id="fibResult" class="result">结果将显示在这里</div>
+        <div class="test-section">
+            <h2>斐波那契数列测试</h2>
+            <div>
+                <input type="number" id="fibNum" value="10">
+                <button onclick="testFibonacci()">计算</button>
+                <div id="fibResult" class="result">结果将显示在这里</div>
+            </div>
         </div>
     </div>
 
