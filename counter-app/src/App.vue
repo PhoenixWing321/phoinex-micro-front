@@ -2,7 +2,7 @@
   <div class="app-container">
     <!-- 原有的计数器组件 -->
     <CounterComponent />
-    
+
     <!-- WebAssembly 演示组件 -->
     <WasmDemo />
   </div>
@@ -27,6 +27,8 @@ export default {
   margin: 0 auto;
   padding: 20px;
   box-sizing: border-box;
+  height: 100%;
+  overflow-y: auto;
 }
 
 /* 确保所有元素使用 border-box */
@@ -39,5 +41,11 @@ export default {
   .app-container {
     padding: 10px;
   }
+}
+
+/* 全局样式 */
+#app {
+  height: 100vh;
+  overflow-y: auto;
 }
 </style>

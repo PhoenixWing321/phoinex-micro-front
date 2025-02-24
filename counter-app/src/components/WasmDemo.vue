@@ -1,7 +1,7 @@
 <template>
   <div class="wasm-demo">
     <h2>Rust WebAssembly 演示</h2>
-    
+
     <div class="calc-section">
       <h3>加法计算</h3>
       <div class="input-group">
@@ -78,11 +78,9 @@ export default {
 
 <style scoped>
 .wasm-demo {
-  max-width: 800px;
-  margin: 20px auto;
   padding: 20px;
-  border: 1px solid #ddd;
-  border-radius: 8px;
+  height: 100%;
+  overflow-y: auto;
   box-sizing: border-box;
 }
 
@@ -95,6 +93,7 @@ export default {
   gap: 10px;
   align-items: center;
   flex-wrap: wrap;
+  margin-bottom: 10px;
 }
 
 input[type="number"] {
@@ -122,7 +121,6 @@ button:hover {
   padding: 10px;
   background-color: #f5f7fa;
   border-radius: 4px;
-  word-break: break-all;
 }
 
 h2 {
@@ -134,4 +132,4 @@ h3 {
   color: #606266;
   margin-bottom: 15px;
 }
-</style> 
+</style>

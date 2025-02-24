@@ -66,6 +66,20 @@
           <h3>TypeScript</h3>
           <p>类型安全的 JavaScript</p>
         </div>
+        <div class="tech-item">
+          <div class="tech-icon">
+            <img src="@/assets/rust-logo.svg" alt="Rust" class="tech-icon-img">
+          </div>
+          <h3>Rust WebAssembly</h3>
+          <p>高性能计算支持</p>
+        </div>
+        <div class="tech-item">
+          <div class="tech-icon">
+            <img src="@/assets/cpp-logo.svg" alt="C++" class="tech-icon-img">
+          </div>
+          <h3>C++ WebAssembly</h3>
+          <p>原生性能计算</p>
+        </div>
       </div>
     </div>
 
@@ -136,8 +150,9 @@ export default defineComponent({
 
 .tech-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  gap: 32px;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 24px;
+  padding: 0 20px;
 }
 
 .tech-item {
@@ -173,6 +188,13 @@ export default defineComponent({
 .tech-item p {
   color: #606266;
   font-size: 14px;
+}
+
+.tech-icon-img {
+  width: 48px;
+  height: 48px;
+  object-fit: contain;
+  margin-bottom: 16px;
 }
 
 .features {
