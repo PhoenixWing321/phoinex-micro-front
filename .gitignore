@@ -28,3 +28,7 @@ target/
 .idea/
 build/
 # cpp-wasm/build/
+
+# Test reports
+/test-report/
+/coverage/

@@ -1,13 +1,19 @@
 #!/bin/bash
 echo "Starting micro-frontend applications..."
 
-# 启动计数器应用
-cd counter-app && npm run serve &
-
-# 启动对话框应用
-cd ../dialog-app && npm run serve &
-
 # 启动主应用
-cd .. && npm run serve &
+npm run dev &
+
+# 启动 counter-app
+cd counter-app && npm run dev &
+
+# 启动 cpp-wasm 服务
+cd ../cpp-wasm && python3 -m http.server 8085 &
+
+# 启动 rust-wasm 服务
+cd ../rust-wasm && python3 -m http.server 8086 &
+
+# 等待所有后台进程
+wait
 
 echo "All applications are starting..." 
