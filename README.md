@@ -1,53 +1,64 @@
-# 微前端示例项目
+# Phoenix 微前端框架
 
-## 项目简介
-这是一个基于 Vue3 + TypeScript + Wujie 的微前端示例项目。项目实现了一个类似操作系统的窗口管理系统，可以同时运行多个独立的微应用，并支持 WebAssembly 计算能力。
+基于 Vite + Vue3 + TypeScript + Wujie 的微前端框架。
 
-## 技术栈
-- Vue 3
-- TypeScript
-- Element Plus
-- Wujie 微前端框架
-- WebAssembly (Rust + C++)
-- Jest (单元测试)
+## 特性
 
+- 🚀 使用 Vite 构建，开发体验极佳
+- 🔥 基于 Vue 3 和 TypeScript，类型安全
+- 📦 使用 Pinia 进行状态管理
+- 🔄 基于 Wujie 的微前端架构
+- 🌓 支持亮色/暗色主题切换
+- 💾 状态持久化
 
-## 开发环境设置
+## 快速开始
 
 ### 安装依赖
-```bash
-npm init vite@latest
 
-```
-
-### 启动开发环境
 ```bash
 npm install
+```
+
+### 启动开发服务器
+
+```bash
 npm run dev
 ```
 
-### 运行测试
-```bash
-# 运行所有测试
-npm test
+### 构建生产版本
 
-# 监视模式运行测试
-npm run test:watch
-```
-
-### 构建项目
 ```bash
-# 构建主应用
 npm run build
-
 ```
 
-### 运行 WebAssembly 模块
-```bash
-# 启动测试服务器
-cd public/wasm
-python -m http.server 8085
+## 项目结构
+
 ```
+src/
+├── App.vue                # 主应用组件
+├── components/            # 公共组件
+├── main.ts                # 入口文件
+├── router/                # 路由配置
+├── store/                 # 状态管理
+├── style.css              # 全局样式
+├── types/                 # 类型定义
+└── views/                 # 页面视图
+```
+
+## 微应用接入
+
+1. 在首页点击"添加应用"
+2. 填写应用名称、入口地址和容器ID
+3. 点击添加即可将微应用接入框架
+
+## 技术栈
+
+- Vite
+- Vue 3
+- TypeScript
+- Pinia
+- Vue Router
+- Wujie
 
 ## 开发指南
 
@@ -121,6 +132,3 @@ python -m http.server 8085
    cd rust-wasm
    wasm-pack build
    ```
-
-## 许可证
-MIT
