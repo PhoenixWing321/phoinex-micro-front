@@ -40,8 +40,13 @@ npm run test:watch
 # 构建主应用
 npm run build
 
-# 构建子应用
-cd counter-app && npm run build
+```
+
+### 运行 WebAssembly 模块
+```bash
+# 启动测试服务器
+cd public/wasm
+python -m http.server 8085
 ```
 
 ## 开发指南
@@ -117,10 +122,5 @@ cd counter-app && npm run build
    wasm-pack build
    ```
 
-
-
-
-
 ## 许可证
 MIT
-
