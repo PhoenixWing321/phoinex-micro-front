@@ -11,6 +11,7 @@ export interface SubApp {
   name: string;
   entry: string;
   container: string;
+  openMode?: 'drawer' | 'blank' | 'mdi'; // 应用打开方式
   [key: string]: any; // 允许其他属性
 }
 

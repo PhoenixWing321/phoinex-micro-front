@@ -2,9 +2,6 @@
   <div class="app-manager">
     <div class="app-manager-header">
       <h1>应用管理</h1>
-      <button @click="toggleTheme" class="theme-toggle">
-        {{ store.currentTheme === 'light' ? '🌙' : '☀️' }}
-      </button>
     </div>
     
     <div class="app-manager-container">
@@ -20,6 +17,9 @@
             <div class="app-item-content" @click="activateApp(app.name)">
               {{ app.name }}
             </div>
+            <button class="open-app-btn" @click="openApp(app)" title="打开应用">
+              ▶
+            </button>
             <button class="delete-app-btn" @click="confirmDeleteApp(app.name)" title="删除应用">
               ×
             </button>
@@ -42,10 +42,14 @@
               <span class="label">容器ID:</span>
               <span class="value">{{ store.currentApp.container }}</span>
             </div>
+            <div class="info-item">
+              <span class="label">打开方式:</span>
+              <span class="value">{{ getOpenModeText(store.currentApp.openMode) }}</span>
+            </div>
           </div>
           <div class="app-actions">
-            <button @click="openAppInDrawer(store.currentApp)" class="primary-btn">
-              在主页打开
+            <button @click="openApp(store.currentApp)" class="primary-btn">
+              打开应用
             </button>
           </div>
         </div>
@@ -73,6 +77,15 @@
           <input v-model="newApp.container" type="text" placeholder="输入容器ID">
           <small>例如: example-container</small>
         </div>
+        <div class="form-group">
+          <label>打开方式</label>
+          <select v-model="newApp.openMode">
+            <option value="drawer">抽屉中打开</option>
+            <option value="blank">新窗口打开</option>
+            <option value="mdi">MDI管理器中打开</option>
+          </select>
+          <small>选择应用的打开方式</small>
+        </div>
         <div class="form-actions">
           <button @click="showAddAppForm = false">取消</button>
           <button @click="addApp" class="primary" :disabled="!isFormValid">添加</button>
@@ -95,11 +108,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, defineEmits } from 'vue'
 import { useFrameworkStore } from '../store/framework'
 import { useRouter } from 'vue-router'
 import type { SubApp } from '../types/framework'
 
+const emit = defineEmits(['open-app'])
 const store = useFrameworkStore()
 const router = useRouter()
 const showAddAppForm = ref(false)
@@ -109,7 +123,8 @@ const appToDelete = ref('')
 const newApp = ref<SubApp>({
   name: '',
   entry: '',
-  container: ''
+  container: '',
+  openMode: 'drawer' // 默认在抽屉中打开
 })
 
 // 表单验证
@@ -121,9 +136,24 @@ const isFormValid = computed(() => {
   )
 })
 
+// 获取打开方式的文本描述
+const getOpenModeText = (openMode?: string) => {
+  switch (openMode) {
+    case 'drawer': return '抽屉中打开';
+    case 'blank': return '新窗口打开';
+    case 'mdi': return 'MDI管理器中打开';
+    default: return '抽屉中打开';
+  }
+}
+
 // 激活应用
 const activateApp = (appName: string) => {
   store.activateApp(appName)
+}
+
+// 打开应用
+const openApp = (app: SubApp) => {
+  emit('open-app', app)
 }
 
 // 添加应用
@@ -140,7 +170,8 @@ const addApp = () => {
     store.registerSubApp({
       name: appName,
       entry: newApp.value.entry.trim(),
-      container: newApp.value.container.trim()
+      container: newApp.value.container.trim(),
+      openMode: newApp.value.openMode
     })
     
     // 添加成功消息
@@ -155,7 +186,8 @@ const addApp = () => {
     newApp.value = {
       name: '',
       entry: '',
-      container: ''
+      container: '',
+      openMode: 'drawer'
     }
     
     showAddAppForm.value = false
@@ -175,18 +207,6 @@ const deleteApp = () => {
     appToDelete.value = ''
     showDeleteConfirm.value = false
   }
-}
-
-// 在主页抽屉中打开应用
-const openAppInDrawer = (app: SubApp) => {
-  store.activateApp(app.name)
-  store.setShowDrawer(true)
-  router.push('/')
-}
-
-// 切换主题
-const toggleTheme = () => {
-  store.toggleTheme()
 }
 </script>
 
@@ -209,30 +229,6 @@ h1 {
   font-size: 1.8rem;
   color: var(--text-color);
   margin: 0;
-}
-
-.theme-toggle {
-  background-color: transparent;
-  border: 1px solid var(--border-color);
-  border-radius: 50%;
-  width: 36px;
-  height: 36px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  font-size: 18px;
-  transition: all 0.3s;
-  color: var(--text-color);
-}
-
-.theme-toggle:hover {
-  background-color: rgba(0, 0, 0, 0.05);
-  transform: translateY(-2px);
-}
-
-:root[data-theme="dark"] .theme-toggle:hover {
-  background-color: rgba(255, 255, 255, 0.1);
 }
 
 .app-manager-container {
@@ -292,7 +288,7 @@ h2, h3 {
   cursor: pointer;
 }
 
-.delete-app-btn {
+.open-app-btn, .delete-app-btn {
   background: none;
   border: none;
   color: #999;
@@ -304,6 +300,10 @@ h2, h3 {
   justify-content: center;
   height: 100%;
   transition: all 0.2s;
+}
+
+.open-app-btn:hover {
+  color: var(--primary-color);
 }
 
 .delete-app-btn:hover {
@@ -323,8 +323,13 @@ h2, h3 {
   color: white;
 }
 
+.app-item.active .open-app-btn,
 .app-item.active .delete-app-btn {
   color: rgba(255, 255, 255, 0.7);
+}
+
+.app-item.active .open-app-btn:hover {
+  color: white;
 }
 
 .app-item.active .delete-app-btn:hover {
@@ -432,7 +437,7 @@ h2, h3 {
   font-size: 0.8rem;
 }
 
-.form-group input {
+.form-group input, .form-group select {
   width: 100%;
   padding: 8px 12px;
   border: 1px solid rgba(0, 0, 0, 0.1);
@@ -497,7 +502,8 @@ h2, h3 {
   background-color: rgba(255, 255, 255, 0.05);
 }
 
-:root[data-theme="dark"] .form-group input {
+:root[data-theme="dark"] .form-group input,
+:root[data-theme="dark"] .form-group select {
   background-color: rgba(0, 0, 0, 0.2);
   border-color: rgba(255, 255, 255, 0.1);
 }
@@ -510,5 +516,23 @@ h2, h3 {
 :root[data-theme="dark"] .dialog-actions button {
   background-color: rgba(0, 0, 0, 0.2);
   border-color: rgba(255, 255, 255, 0.1);
+}
+
+@media (max-width: 768px) {
+  .app-manager {
+    flex-direction: column;
+  }
+  
+  .app-list-section {
+    width: 100%;
+    height: auto;
+    max-height: 40%;
+    border-right: none;
+    border-bottom: 1px solid var(--border-color);
+  }
+  
+  .app-detail-section {
+    height: 60%;
+  }
 }
 </style> 

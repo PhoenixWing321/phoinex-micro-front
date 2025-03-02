@@ -3,17 +3,20 @@
     {
       "name": "百度",
       "entry": "https://www.baidu.com",
-      "container": "baidu-container"
+      "container": "baidu-container",
+      "openMode": "drawer"
     },
     {
       "name": "CSDN",
       "entry": "https://www.csdn.net",
-      "container": "csdn-container"
+      "container": "csdn-container",
+      "openMode": "blank"
     },
     {
       "name": "Gitee",
       "entry": "https://gitee.com",
-      "container": "gitee-container"
+      "container": "gitee-container",
+      "openMode": "mdi"
     }
   ]
 } 

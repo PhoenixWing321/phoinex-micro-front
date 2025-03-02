@@ -24,7 +24,7 @@
             </div>
             <div class="app-name">{{ app.name }}</div>
           </div>
-          <div class="app-card add" @click="goToAppManager">
+          <div class="app-card add" @click="openAppManager">
             <div class="app-icon add">
               <span>+</span>
             </div>
@@ -89,37 +89,14 @@
         </div>
       </div>
     </div>
-    
-    <!-- 应用抽屉 -->
-    <div class="app-drawer" :class="{ 'drawer-open': store.showDrawer }">
-      <div class="drawer-header">
-        <h2>{{ store.currentAppName }}</h2>
-        <button @click="closeDrawer" class="close-drawer">×</button>
-      </div>
-      <div class="drawer-content">
-        <div v-if="store.currentApp" :id="store.currentApp.container" class="wujie-container-app"></div>
-        <div v-else class="no-app-selected">
-          请选择一个应用
-        </div>
-      </div>
-    </div>
-    
-    <!-- 抽屉遮罩层 -->
-    <div 
-      v-if="store.showDrawer" 
-      class="drawer-overlay"
-      @click="closeDrawer"
-    ></div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { useFrameworkStore } from '../store/framework'
-import { useRouter } from 'vue-router'
 import type { SubApp } from '../types/framework'
 
 const store = useFrameworkStore()
-const router = useRouter()
 
 // 获取应用名称首字母作为图标
 const getAppInitial = (name: string): string => {
@@ -128,18 +105,13 @@ const getAppInitial = (name: string): string => {
 
 // 打开应用
 const openApp = (app: SubApp) => {
-  store.activateApp(app.name)
-  store.setShowDrawer(true)
+  // 使用全局事件总线触发打开应用事件
+  window.dispatchEvent(new CustomEvent('open-wujie-app', { detail: app }))
 }
 
-// 关闭抽屉
-const closeDrawer = () => {
-  store.setShowDrawer(false)
-}
-
-// 前往应用管理页面
-const goToAppManager = () => {
-  router.push('/app-manager')
+// 打开应用管理
+const openAppManager = () => {
+  window.dispatchEvent(new CustomEvent('open-app-manager'))
 }
 
 // 切换主题
@@ -367,90 +339,7 @@ h2 {
   background-color: rgba(255, 255, 255, 0.05);
 }
 
-/* 应用抽屉 */
-.app-drawer {
-  position: fixed;
-  top: 0;
-  right: -80%;
-  width: 80%;
-  height: 100%;
-  background-color: var(--background-color);
-  box-shadow: -5px 0 15px rgba(0, 0, 0, 0.1);
-  transition: right 0.3s ease;
-  z-index: 1000;
-  display: flex;
-  flex-direction: column;
-}
-
-.app-drawer.drawer-open {
-  right: 0;
-}
-
-.drawer-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 15px 20px;
-  border-bottom: 1px solid var(--border-color);
-}
-
-.drawer-header h2 {
-  margin: 0;
-  font-size: 1.4rem;
-}
-
-.close-drawer {
-  background: none;
-  border: none;
-  font-size: 24px;
-  cursor: pointer;
-  color: var(--text-color);
-  opacity: 0.7;
-  transition: opacity 0.2s;
-}
-
-.close-drawer:hover {
-  opacity: 1;
-}
-
-.drawer-content {
-  flex: 1;
-  overflow: hidden;
-  position: relative;
-}
-
-.wujie-container-app {
-  width: 100%;
-  height: 100%;
-  border: none;
-}
-
-.no-app-selected {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 100%;
-  color: var(--text-color);
-  opacity: 0.6;
-  font-size: 18px;
-}
-
-.drawer-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
-  z-index: 999;
-}
-
 @media (max-width: 768px) {
-  .app-drawer {
-    width: 100%;
-    right: -100%;
-  }
-  
   .app-grid {
     grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
   }

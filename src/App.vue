@@ -11,15 +11,15 @@
       
       <!-- 中间导航区 -->
       <nav>
-        <router-link to="/">
+        <router-link to="/" @click="closeDrawer">
           <i class="nav-icon">🏠</i>
           <span class="nav-text">首页</span>
         </router-link>
-        <router-link to="/app-manager">
+        <a @click="openAppManager" class="nav-link">
           <i class="nav-icon">📱</i>
           <span class="nav-text">应用管理</span>
-        </router-link>
-        <router-link to="/about">
+        </a>
+        <router-link to="/about" @click="closeDrawer">
           <i class="nav-icon">ℹ️</i>
           <span class="nav-text">关于</span>
         </router-link>
@@ -33,20 +33,134 @@
     <div class="content-wrapper">
       <router-view />
     </div>
+    
+    <!-- 应用抽屉 -->
+    <div class="app-drawer" :class="{ 'drawer-open': store.showDrawer }">
+      <div class="drawer-header">
+        <h2>{{ drawerTitle }}</h2>
+        <button @click="closeDrawer" class="close-drawer">×</button>
+      </div>
+      <div class="drawer-content">
+        <!-- 应用管理内容 -->
+        <div v-if="drawerType === 'app-manager'" class="drawer-app-manager">
+          <AppManager @open-app="openAppInDrawer" />
+        </div>
+        
+        <!-- 无界应用容器 -->
+        <div v-else-if="drawerType === 'wujie-app' && store.currentApp" :id="store.currentApp.container" class="wujie-container-app"></div>
+        
+        <div v-else class="no-app-selected">
+          请选择一个应用
+        </div>
+      </div>
+    </div>
+    
+    <!-- 抽屉遮罩层 -->
+    <div 
+      v-if="store.showDrawer" 
+      class="drawer-overlay"
+      @click="closeDrawer"
+    ></div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { onMounted } from 'vue'
+import { onMounted, ref, watch, onBeforeUnmount } from 'vue'
 import { useFrameworkStore } from './store/framework'
 import FrameworkHeader from './components/FrameworkHeader.vue'
 import UserPanel from './components/UserPanel.vue'
+import AppManager from './views/AppManager.vue'
+import type { SubApp } from './types/framework'
+import WujieVue from 'wujie-vue3'
+
+const { setupApp, preloadApp, startApp } = WujieVue
 
 const store = useFrameworkStore()
+const drawerType = ref<'app-manager' | 'wujie-app' | null>(null)
+const drawerTitle = ref('')
 
 // 切换侧边栏状态
 const toggleSidebar = () => {
   store.toggleSidebar()
+}
+
+// 打开应用管理抽屉
+const openAppManager = () => {
+  drawerType.value = 'app-manager'
+  drawerTitle.value = '应用管理'
+  store.setShowDrawer(true)
+}
+
+// 在抽屉中打开应用
+const openAppInDrawer = (app: SubApp) => {
+  store.activateApp(app.name)
+  
+  // 根据应用的打开方式决定如何打开
+  if (app.openMode === 'blank') {
+    // 在新窗口中打开
+    window.open(app.entry, '_blank')
+    return
+  } else if (app.openMode === 'mdi') {
+    // 在MDI管理器中打开（这里需要根据实际MDI管理器的API进行调整）
+    console.log('在MDI管理器中打开:', app.name)
+    // 这里可以添加MDI管理器的打开逻辑
+    return
+  }
+  
+  // 默认在抽屉中打开
+  drawerType.value = 'wujie-app'
+  drawerTitle.value = app.name
+  store.setShowDrawer(true)
+  
+  // 使用无界微前端加载应用
+  setupApp({
+    name: app.name,
+    url: app.entry,
+    exec: true,
+    sync: true
+  })
+  
+  // 预加载应用
+  preloadApp({
+    name: app.name,
+    url: app.entry
+  })
+  
+  // 启动应用
+  setTimeout(() => {
+    startApp({
+      name: app.name,
+      url: app.entry,
+      el: `#${app.container}`,
+      sync: true
+    })
+  }, 100)
+}
+
+// 关闭抽屉
+const closeDrawer = () => {
+  store.setShowDrawer(false)
+  setTimeout(() => {
+    drawerType.value = null
+    drawerTitle.value = ''
+  }, 300)
+}
+
+// 监听当前应用变化
+watch(() => store.currentApp, (newApp) => {
+  if (newApp && drawerType.value === 'wujie-app') {
+    drawerTitle.value = newApp.name
+  }
+})
+
+// 监听全局事件
+const handleOpenWujieApp = (event: CustomEvent) => {
+  const app = event.detail as SubApp
+  openAppInDrawer(app)
+}
+
+const handleOpenAppManager = () => {
+  openAppManager()
 }
 
 // 在组件挂载后初始化
@@ -56,6 +170,16 @@ onMounted(async () => {
   
   // 加载默认应用配置
   await store.loadDefaultApps()
+  
+  // 添加全局事件监听
+  window.addEventListener('open-wujie-app', handleOpenWujieApp as EventListener)
+  window.addEventListener('open-app-manager', handleOpenAppManager)
+})
+
+// 在组件卸载前移除事件监听
+onBeforeUnmount(() => {
+  window.removeEventListener('open-wujie-app', handleOpenWujieApp as EventListener)
+  window.removeEventListener('open-app-manager', handleOpenAppManager)
 })
 </script>
 
@@ -174,7 +298,7 @@ nav {
   flex: 1;
 }
 
-nav a {
+nav a, .nav-link {
   color: var(--text-color);
   text-decoration: none;
   padding: 10px 15px;
@@ -183,9 +307,10 @@ nav a {
   white-space: nowrap;
   display: flex;
   align-items: center;
+  cursor: pointer;
 }
 
-nav a:hover, nav a.router-link-active {
+nav a:hover, nav a.router-link-active, .nav-link:hover {
   background-color: var(--primary-color);
   color: white;
 }
@@ -202,7 +327,7 @@ nav a:hover, nav a.router-link-active {
   flex: 1;
 }
 
-.sidebar.collapsed nav a {
+.sidebar.collapsed nav a, .sidebar.collapsed .nav-link {
   overflow: hidden;
   white-space: nowrap;
   padding: 10px 5px;
@@ -223,5 +348,95 @@ nav a:hover, nav a.router-link-active {
 :root[data-theme="dark"] .sidebar {
   background-color: rgba(255, 255, 255, 0.03);
   border-right-color: var(--border-color);
+}
+
+/* 应用抽屉 */
+.app-drawer {
+  position: fixed;
+  top: 0;
+  right: -80%;
+  width: 80%;
+  height: 100%;
+  background-color: var(--background-color);
+  box-shadow: -5px 0 15px rgba(0, 0, 0, 0.1);
+  transition: right 0.3s ease;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+}
+
+.app-drawer.drawer-open {
+  right: 0;
+}
+
+.drawer-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 20px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.drawer-header h2 {
+  margin: 0;
+  font-size: 1.4rem;
+}
+
+.close-drawer {
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  color: var(--text-color);
+  opacity: 0.7;
+  transition: opacity 0.2s;
+}
+
+.close-drawer:hover {
+  opacity: 1;
+}
+
+.drawer-content {
+  flex: 1;
+  overflow: hidden;
+  position: relative;
+}
+
+.drawer-app-manager {
+  height: 100%;
+  overflow: auto;
+}
+
+.wujie-container-app {
+  width: 100%;
+  height: 100%;
+  border: none;
+}
+
+.no-app-selected {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: var(--text-color);
+  opacity: 0.6;
+  font-size: 18px;
+}
+
+.drawer-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 999;
+}
+
+@media (max-width: 768px) {
+  .app-drawer {
+    width: 100%;
+    right: -100%;
+  }
 }
 </style>
