@@ -11,8 +11,18 @@
       
       <!-- 中间导航区 -->
       <nav>
-        <router-link to="/">首页</router-link>
-        <router-link to="/about">关于</router-link>
+        <router-link to="/">
+          <i class="nav-icon">🏠</i>
+          <span class="nav-text">首页</span>
+        </router-link>
+        <router-link to="/app-manager">
+          <i class="nav-icon">📱</i>
+          <span class="nav-text">应用管理</span>
+        </router-link>
+        <router-link to="/about">
+          <i class="nav-icon">ℹ️</i>
+          <span class="nav-text">关于</span>
+        </router-link>
       </nav>
       
       <!-- 底部用户区 -->
@@ -171,11 +181,25 @@ nav a {
   border-radius: 4px;
   transition: background-color 0.3s;
   white-space: nowrap;
+  display: flex;
+  align-items: center;
 }
 
 nav a:hover, nav a.router-link-active {
   background-color: var(--primary-color);
   color: white;
+}
+
+.nav-icon {
+  font-size: 18px;
+  margin-right: 10px;
+  display: inline-block;
+  width: 24px;
+  text-align: center;
+}
+
+.nav-text {
+  flex: 1;
 }
 
 .sidebar.collapsed nav a {
@@ -185,6 +209,15 @@ nav a:hover, nav a.router-link-active {
   display: flex;
   justify-content: center;
   font-size: 0.9rem;
+}
+
+.sidebar.collapsed .nav-text {
+  display: none;
+}
+
+.sidebar.collapsed .nav-icon {
+  margin-right: 0;
+  font-size: 20px;
 }
 
 :root[data-theme="dark"] .sidebar {

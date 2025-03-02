@@ -1,6 +1,5 @@
 import { defineStore } from 'pinia'
 import type { FrameworkState, UserInfo, SubApp } from '../types/framework'
-import axios from 'axios'
 
 // 定义框架级别的store
 export const useFrameworkStore = defineStore('framework', {
@@ -17,6 +16,7 @@ export const useFrameworkStore = defineStore('framework', {
     // 微前端相关
     subApps: [], // 子应用列表
     currentApp: null, // 当前激活的子应用
+    showDrawer: false, // 是否显示应用抽屉
     
     // 系统状态
     isLoading: false, // 全局加载状态
@@ -117,14 +117,24 @@ export const useFrameworkStore = defineStore('framework', {
       }
     },
     
-    // 从配置文件加载默认应用
+    // 设置抽屉显示状态
+    setShowDrawer(status: boolean): void {
+      this.showDrawer = status
+    },
+    
+    // 从配置文件加载默认应用 - 使用 fetch 替代 axios
     async loadDefaultApps(): Promise<void> {
       if (this.configLoaded) return;
       
       try {
         this.setLoading(true);
-        const response = await axios.get('/config.json');
-        const config = response.data;
+        const response = await fetch('/config.json');
+        
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const config = await response.json();
         
         // 如果本地没有应用，则加载默认应用
         if (this.subApps.length === 0 && config.defaultApps) {
@@ -175,6 +185,6 @@ export const useFrameworkStore = defineStore('framework', {
   persist: {
     key: 'framework-store',
     storage: localStorage,
-    paths: ['currentTheme', 'sidebarCollapsed', 'userInfo', 'isLoggedIn', 'subApps', 'currentApp']
+    paths: ['currentTheme', 'sidebarCollapsed', 'userInfo', 'isLoggedIn', 'subApps', 'currentApp', 'showDrawer']
   }
 }) 

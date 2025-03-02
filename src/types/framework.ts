@@ -26,7 +26,7 @@ export interface SystemMessage {
 export interface FrameworkState {
   // 布局相关
   sidebarCollapsed: boolean;
-  currentTheme: 'light' | 'dark';
+  currentTheme: string;
   
   // 用户相关
   userInfo: UserInfo | null;
@@ -35,8 +35,12 @@ export interface FrameworkState {
   // 微前端相关
   subApps: SubApp[];
   currentApp: SubApp | null;
+  showDrawer: boolean;
   
   // 系统状态
   isLoading: boolean;
   systemMessages: SystemMessage[];
+  
+  // 配置相关
+  configLoaded: boolean;
 } 

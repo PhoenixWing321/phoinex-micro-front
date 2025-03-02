@@ -7,159 +7,139 @@
         {{ store.currentTheme === 'light' ? '🌙' : '☀️' }}
       </button>
     </div>
-    <div class="wujie-container">
-      <div class="wujie-apps">
-        <h2>微前端应用列表</h2>
-        <div class="app-list">
+    
+    <div class="home-content">
+      <!-- 快捷应用区域 -->
+      <div class="quick-apps">
+        <h2>快捷应用</h2>
+        <div class="app-grid">
           <div 
-            v-for="app in store.subApps" 
+            v-for="app in store.subApps.slice(0, 6)" 
             :key="app.name"
-            class="app-item"
-            :class="{ active: app.name === store.currentAppName }"
+            class="app-card"
+            @click="openApp(app)"
           >
-            <div class="app-item-content" @click="activateApp(app.name)">
-              {{ app.name }}
+            <div class="app-icon">
+              <span>{{ getAppInitial(app.name) }}</span>
             </div>
-            <button class="delete-app-btn" @click="confirmDeleteApp(app.name)" title="删除应用">
-              ×
-            </button>
+            <div class="app-name">{{ app.name }}</div>
           </div>
-          <div class="app-item add" @click="showAddAppForm = true">
-            + 添加应用
+          <div class="app-card add" @click="goToAppManager">
+            <div class="app-icon add">
+              <span>+</span>
+            </div>
+            <div class="app-name">管理应用</div>
           </div>
         </div>
       </div>
       
-      <div class="wujie-content">
-        <div v-if="store.currentApp" class="current-app">
-          <h3>当前应用: {{ store.currentAppName }}</h3>
-          <!-- 这里是wujie的容器 -->
-          <div :id="store.currentApp.container" class="wujie-container-app"></div>
+      <!-- 系统信息区域 -->
+      <div class="system-info">
+        <h2>系统信息</h2>
+        <div class="info-cards">
+          <div class="info-card">
+            <div class="info-icon">📊</div>
+            <div class="info-content">
+              <h3>应用统计</h3>
+              <p>当前共有 {{ store.subApps.length }} 个应用</p>
+            </div>
+          </div>
+          <div class="info-card">
+            <div class="info-icon">👤</div>
+            <div class="info-content">
+              <h3>用户信息</h3>
+              <p>{{ store.isLoggedIn ? store.username : '未登录' }}</p>
+            </div>
+          </div>
+          <div class="info-card">
+            <div class="info-icon">🔔</div>
+            <div class="info-content">
+              <h3>系统消息</h3>
+              <p>{{ store.systemMessages.length }} 条未读消息</p>
+            </div>
+          </div>
         </div>
-        <div v-else class="no-app">
-          请选择一个微应用
+      </div>
+      
+      <!-- 使用指南 -->
+      <div class="usage-guide">
+        <h2>使用指南</h2>
+        <div class="guide-content">
+          <div class="guide-item">
+            <div class="guide-icon">1</div>
+            <div class="guide-text">
+              <h3>添加应用</h3>
+              <p>在应用管理页面添加您需要的微前端应用</p>
+            </div>
+          </div>
+          <div class="guide-item">
+            <div class="guide-icon">2</div>
+            <div class="guide-text">
+              <h3>打开应用</h3>
+              <p>点击首页的应用卡片或在应用管理页面打开应用</p>
+            </div>
+          </div>
+          <div class="guide-item">
+            <div class="guide-icon">3</div>
+            <div class="guide-text">
+              <h3>管理应用</h3>
+              <p>在应用管理页面可以添加、删除和管理您的应用</p>
+            </div>
+          </div>
         </div>
       </div>
     </div>
     
-    <!-- 添加应用表单 -->
-    <div v-if="showAddAppForm" class="add-app-form">
-      <div class="form-content">
-        <h3>添加微应用</h3>
-        <div class="form-group">
-          <label>应用名称</label>
-          <input v-model="newApp.name" type="text" placeholder="输入应用名称">
-        </div>
-        <div class="form-group">
-          <label>入口地址</label>
-          <input v-model="newApp.entry" type="text" placeholder="输入应用入口URL">
-          <small>例如: https://www.example.com</small>
-        </div>
-        <div class="form-group">
-          <label>容器ID</label>
-          <input v-model="newApp.container" type="text" placeholder="输入容器ID">
-          <small>例如: example-container</small>
-        </div>
-        <div class="form-actions">
-          <button @click="showAddAppForm = false">取消</button>
-          <button @click="addApp" class="primary" :disabled="!isFormValid">添加</button>
+    <!-- 应用抽屉 -->
+    <div class="app-drawer" :class="{ 'drawer-open': store.showDrawer }">
+      <div class="drawer-header">
+        <h2>{{ store.currentAppName }}</h2>
+        <button @click="closeDrawer" class="close-drawer">×</button>
+      </div>
+      <div class="drawer-content">
+        <div v-if="store.currentApp" :id="store.currentApp.container" class="wujie-container-app"></div>
+        <div v-else class="no-app-selected">
+          请选择一个应用
         </div>
       </div>
     </div>
     
-    <!-- 删除确认对话框 -->
-    <div v-if="showDeleteConfirm" class="delete-confirm-dialog">
-      <div class="dialog-content">
-        <h3>确认删除</h3>
-        <p>确定要删除应用 "{{ appToDelete }}" 吗？此操作不可撤销。</p>
-        <div class="dialog-actions">
-          <button @click="showDeleteConfirm = false">取消</button>
-          <button @click="deleteApp" class="danger">删除</button>
-        </div>
-      </div>
-    </div>
+    <!-- 抽屉遮罩层 -->
+    <div 
+      v-if="store.showDrawer" 
+      class="drawer-overlay"
+      @click="closeDrawer"
+    ></div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
 import { useFrameworkStore } from '../store/framework'
+import { useRouter } from 'vue-router'
 import type { SubApp } from '../types/framework'
 
 const store = useFrameworkStore()
-const showAddAppForm = ref(false)
-const showDeleteConfirm = ref(false)
-const appToDelete = ref('')
+const router = useRouter()
 
-const newApp = ref<SubApp>({
-  name: '',
-  entry: '',
-  container: ''
-})
-
-// 表单验证
-const isFormValid = computed(() => {
-  return (
-    newApp.value.name.trim() !== '' && 
-    newApp.value.entry.trim() !== '' && 
-    newApp.value.container.trim() !== ''
-  )
-})
-
-// 激活应用
-const activateApp = (appName: string) => {
-  store.activateApp(appName)
+// 获取应用名称首字母作为图标
+const getAppInitial = (name: string): string => {
+  return name.charAt(0).toUpperCase()
 }
 
-// 添加应用
-const addApp = () => {
-  if (isFormValid.value) {
-    const appName = newApp.value.name.trim();
-    
-    // 检查应用名称是否已存在
-    if (store.subApps.some(app => app.name === appName)) {
-      store.addSystemMessage(`应用名称 "${appName}" 已存在，请使用其他名称`);
-      return;
-    }
-    
-    store.registerSubApp({
-      name: appName,
-      entry: newApp.value.entry.trim(),
-      container: newApp.value.container.trim()
-    })
-    
-    // 添加成功消息
-    store.addSystemMessage(`成功添加应用: ${appName}`)
-    
-    // 如果没有激活的应用，则激活新添加的应用
-    if (!store.currentApp) {
-      store.activateApp(appName)
-    }
-    
-    // 重置表单
-    newApp.value = {
-      name: '',
-      entry: '',
-      container: ''
-    }
-    
-    showAddAppForm.value = false
-  }
+// 打开应用
+const openApp = (app: SubApp) => {
+  store.activateApp(app.name)
+  store.setShowDrawer(true)
 }
 
-// 确认删除应用
-const confirmDeleteApp = (appName: string) => {
-  appToDelete.value = appName
-  showDeleteConfirm.value = true
+// 关闭抽屉
+const closeDrawer = () => {
+  store.setShowDrawer(false)
 }
 
-// 删除应用
-const deleteApp = () => {
-  if (appToDelete.value) {
-    store.removeApp(appToDelete.value)
-    appToDelete.value = ''
-    showDeleteConfirm.value = false
-  }
+// 前往应用管理页面
+const goToAppManager = () => {
+  router.push('/app-manager')
 }
 
 // 切换主题
@@ -174,7 +154,8 @@ const toggleTheme = () => {
   height: 100%;
   display: flex;
   flex-direction: column;
-  margin-left: 0; /* 确保没有左侧margin */
+  position: relative;
+  overflow: hidden;
 }
 
 .home-header {
@@ -214,120 +195,237 @@ h1 {
   background-color: rgba(255, 255, 255, 0.1);
 }
 
-.wujie-container {
-  display: flex;
+.home-content {
   flex: 1;
-  border: 1px solid rgba(0, 0, 0, 0.1);
-  border-radius: 8px;
-  overflow: hidden;
-  height: calc(100% - 60px);
-  background-color: var(--background-color);
-}
-
-.wujie-apps {
-  width: 220px;
-  min-width: 220px;
-  flex-shrink: 0;
-  padding: 15px;
-  background-color: rgba(0, 0, 0, 0.02);
-  border-right: 1px solid rgba(0, 0, 0, 0.1);
   overflow-y: auto;
+  padding-right: 10px;
 }
 
-.wujie-content {
-  flex: 1;
-  padding: 20px;
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
+/* 快捷应用区域 */
+.quick-apps {
+  margin-bottom: 30px;
 }
 
-.wujie-container-app {
-  flex: 1;
-  margin-top: 15px;
-  border: 1px dashed rgba(0, 0, 0, 0.1);
-  border-radius: 4px;
-  min-height: 400px;
-}
-
-h2, h3 {
-  color: var(--text-color);
+h2 {
+  font-size: 1.4rem;
   margin-bottom: 15px;
+  color: var(--text-color);
 }
 
-.app-list {
-  margin-top: 15px;
+.app-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 20px;
+}
+
+.app-card {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-}
-
-.app-item {
-  display: flex;
-  justify-content: space-between;
   align-items: center;
-  border-radius: 4px;
+  padding: 15px;
   background-color: rgba(255, 255, 255, 0.8);
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
   transition: all 0.3s;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-  color: #333;
-}
-
-.app-item-content {
-  flex: 1;
-  padding: 10px 15px;
   cursor: pointer;
 }
 
-.delete-app-btn {
-  background: none;
-  border: none;
-  color: #999;
-  font-size: 18px;
-  cursor: pointer;
-  padding: 0 10px;
+.app-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+.app-icon {
+  width: 50px;
+  height: 50px;
+  border-radius: 12px;
+  background-color: var(--primary-color);
   display: flex;
   align-items: center;
   justify-content: center;
-  height: 100%;
-  transition: all 0.2s;
+  margin-bottom: 10px;
 }
 
-.delete-app-btn:hover {
-  color: #ff4d4d;
-}
-
-.app-item:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-}
-
-.app-item.active {
-  background-color: var(--primary-color);
-}
-
-.app-item.active .app-item-content {
+.app-icon span {
   color: white;
+  font-size: 24px;
+  font-weight: bold;
 }
 
-.app-item.active .delete-app-btn {
-  color: rgba(255, 255, 255, 0.7);
-}
-
-.app-item.active .delete-app-btn:hover {
-  color: white;
-}
-
-.app-item.add {
-  border: 1px dashed #ccc;
-  background-color: transparent;
+.app-name {
+  font-size: 14px;
   text-align: center;
   color: var(--text-color);
-  cursor: pointer;
-  padding: 10px 15px;
 }
 
-.no-app {
+.app-card.add .app-icon {
+  background-color: rgba(0, 0, 0, 0.1);
+}
+
+.app-card.add .app-icon span {
+  color: var(--text-color);
+}
+
+:root[data-theme="dark"] .app-card {
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+:root[data-theme="dark"] .app-card.add .app-icon {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* 系统信息区域 */
+.system-info {
+  margin-bottom: 30px;
+}
+
+.info-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 20px;
+}
+
+.info-card {
+  display: flex;
+  align-items: center;
+  padding: 20px;
+  background-color: rgba(255, 255, 255, 0.8);
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.info-icon {
+  font-size: 28px;
+  margin-right: 15px;
+}
+
+.info-content h3 {
+  font-size: 16px;
+  margin: 0 0 5px 0;
+  color: var(--text-color);
+}
+
+.info-content p {
+  margin: 0;
+  color: var(--text-color);
+  opacity: 0.8;
+}
+
+:root[data-theme="dark"] .info-card {
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+/* 使用指南 */
+.usage-guide {
+  margin-bottom: 30px;
+}
+
+.guide-content {
+  background-color: rgba(255, 255, 255, 0.8);
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.guide-item {
+  display: flex;
+  align-items: flex-start;
+  margin-bottom: 20px;
+}
+
+.guide-item:last-child {
+  margin-bottom: 0;
+}
+
+.guide-icon {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background-color: var(--primary-color);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  margin-right: 15px;
+  flex-shrink: 0;
+}
+
+.guide-text h3 {
+  font-size: 16px;
+  margin: 0 0 5px 0;
+  color: var(--text-color);
+}
+
+.guide-text p {
+  margin: 0;
+  color: var(--text-color);
+  opacity: 0.8;
+}
+
+:root[data-theme="dark"] .guide-content {
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+/* 应用抽屉 */
+.app-drawer {
+  position: fixed;
+  top: 0;
+  right: -80%;
+  width: 80%;
+  height: 100%;
+  background-color: var(--background-color);
+  box-shadow: -5px 0 15px rgba(0, 0, 0, 0.1);
+  transition: right 0.3s ease;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+}
+
+.app-drawer.drawer-open {
+  right: 0;
+}
+
+.drawer-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 20px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.drawer-header h2 {
+  margin: 0;
+  font-size: 1.4rem;
+}
+
+.close-drawer {
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  color: var(--text-color);
+  opacity: 0.7;
+  transition: opacity 0.2s;
+}
+
+.close-drawer:hover {
+  opacity: 1;
+}
+
+.drawer-content {
+  flex: 1;
+  overflow: hidden;
+  position: relative;
+}
+
+.wujie-container-app {
+  width: 100%;
+  height: 100%;
+  border: none;
+}
+
+.no-app-selected {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -337,128 +435,28 @@ h2, h3 {
   font-size: 18px;
 }
 
-.current-app {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-}
-
-.add-app-form, .delete-confirm-dialog {
+.drawer-overlay {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
   background-color: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
+  z-index: 999;
 }
 
-.form-content, .dialog-content {
-  background-color: var(--background-color);
-  padding: 30px;
-  border-radius: 8px;
-  width: 400px;
-  max-width: 90%;
-  color: var(--text-color);
-}
-
-.form-group {
-  margin-bottom: 15px;
-}
-
-.form-group label {
-  display: block;
-  margin-bottom: 5px;
-  font-weight: bold;
-}
-
-.form-group small {
-  display: block;
-  color: #666;
-  margin-top: 5px;
-  font-size: 0.8rem;
-}
-
-.form-group input {
-  width: 100%;
-  padding: 8px 12px;
-  border: 1px solid rgba(0, 0, 0, 0.1);
-  border-radius: 4px;
-  background-color: var(--background-color);
-  color: var(--text-color);
-}
-
-.form-actions, .dialog-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 10px;
-  margin-top: 20px;
-}
-
-.form-actions button, .dialog-actions button {
-  padding: 8px 16px;
-  border-radius: 4px;
-  border: 1px solid rgba(0, 0, 0, 0.1);
-  background-color: var(--background-color);
-  color: var(--text-color);
-  cursor: pointer;
-}
-
-.form-actions button.primary {
-  background-color: var(--primary-color);
-  color: white;
-  border-color: var(--primary-color);
-}
-
-.form-actions button:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.dialog-actions button.danger {
-  background-color: #ff4d4d;
-  color: white;
-  border-color: #ff4d4d;
-}
-
-/* 暗黑主题适配 */
-:root[data-theme="dark"] .wujie-apps {
-  background-color: rgba(255, 255, 255, 0.03);
-  border-right-color: rgba(255, 255, 255, 0.1);
-}
-
-:root[data-theme="dark"] .wujie-container {
-  border-color: rgba(255, 255, 255, 0.1);
-}
-
-:root[data-theme="dark"] .app-item {
-  background-color: rgba(255, 255, 255, 0.05);
-  color: var(--text-color);
-}
-
-:root[data-theme="dark"] .app-item.add {
-  border-color: rgba(255, 255, 255, 0.2);
-}
-
-:root[data-theme="dark"] .wujie-container-app {
-  border-color: rgba(255, 255, 255, 0.1);
-}
-
-:root[data-theme="dark"] .form-group input {
-  background-color: rgba(0, 0, 0, 0.2);
-  border-color: rgba(255, 255, 255, 0.1);
-}
-
-:root[data-theme="dark"] .form-group small {
-  color: #aaa;
-}
-
-:root[data-theme="dark"] .form-actions button,
-:root[data-theme="dark"] .dialog-actions button {
-  background-color: rgba(0, 0, 0, 0.2);
-  border-color: rgba(255, 255, 255, 0.1);
+@media (max-width: 768px) {
+  .app-drawer {
+    width: 100%;
+    right: -100%;
+  }
+  
+  .app-grid {
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  }
+  
+  .info-cards {
+    grid-template-columns: 1fr;
+  }
 }
 </style> 
