@@ -16,9 +16,13 @@
             :key="app.name"
             class="app-item"
             :class="{ active: app.name === store.currentAppName }"
-            @click="activateApp(app.name)"
           >
-            {{ app.name }}
+            <div class="app-item-content" @click="activateApp(app.name)">
+              {{ app.name }}
+            </div>
+            <button class="delete-app-btn" @click="confirmDeleteApp(app.name)" title="删除应用">
+              ×
+            </button>
           </div>
           <div class="app-item add" @click="showAddAppForm = true">
             + 添加应用
@@ -49,14 +53,28 @@
         <div class="form-group">
           <label>入口地址</label>
           <input v-model="newApp.entry" type="text" placeholder="输入应用入口URL">
+          <small>例如: https://www.example.com</small>
         </div>
         <div class="form-group">
           <label>容器ID</label>
           <input v-model="newApp.container" type="text" placeholder="输入容器ID">
+          <small>例如: example-container</small>
         </div>
         <div class="form-actions">
           <button @click="showAddAppForm = false">取消</button>
-          <button @click="addApp" class="primary">添加</button>
+          <button @click="addApp" class="primary" :disabled="!isFormValid">添加</button>
+        </div>
+      </div>
+    </div>
+    
+    <!-- 删除确认对话框 -->
+    <div v-if="showDeleteConfirm" class="delete-confirm-dialog">
+      <div class="dialog-content">
+        <h3>确认删除</h3>
+        <p>确定要删除应用 "{{ appToDelete }}" 吗？此操作不可撤销。</p>
+        <div class="dialog-actions">
+          <button @click="showDeleteConfirm = false">取消</button>
+          <button @click="deleteApp" class="danger">删除</button>
         </div>
       </div>
     </div>
@@ -64,16 +82,28 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { useFrameworkStore } from '../store/framework'
 import type { SubApp } from '../types/framework'
 
 const store = useFrameworkStore()
 const showAddAppForm = ref(false)
+const showDeleteConfirm = ref(false)
+const appToDelete = ref('')
+
 const newApp = ref<SubApp>({
   name: '',
   entry: '',
   container: ''
+})
+
+// 表单验证
+const isFormValid = computed(() => {
+  return (
+    newApp.value.name.trim() !== '' && 
+    newApp.value.entry.trim() !== '' && 
+    newApp.value.container.trim() !== ''
+  )
 })
 
 // 激活应用
@@ -83,17 +113,28 @@ const activateApp = (appName: string) => {
 
 // 添加应用
 const addApp = () => {
-  if (newApp.value.name && newApp.value.entry && newApp.value.container) {
-    const appName = newApp.value.name;
+  if (isFormValid.value) {
+    const appName = newApp.value.name.trim();
+    
+    // 检查应用名称是否已存在
+    if (store.subApps.some(app => app.name === appName)) {
+      store.addSystemMessage(`应用名称 "${appName}" 已存在，请使用其他名称`);
+      return;
+    }
     
     store.registerSubApp({
       name: appName,
-      entry: newApp.value.entry,
-      container: newApp.value.container
+      entry: newApp.value.entry.trim(),
+      container: newApp.value.container.trim()
     })
     
     // 添加成功消息
     store.addSystemMessage(`成功添加应用: ${appName}`)
+    
+    // 如果没有激活的应用，则激活新添加的应用
+    if (!store.currentApp) {
+      store.activateApp(appName)
+    }
     
     // 重置表单
     newApp.value = {
@@ -103,6 +144,21 @@ const addApp = () => {
     }
     
     showAddAppForm.value = false
+  }
+}
+
+// 确认删除应用
+const confirmDeleteApp = (appName: string) => {
+  appToDelete.value = appName
+  showDeleteConfirm.value = true
+}
+
+// 删除应用
+const deleteApp = () => {
+  if (appToDelete.value) {
+    store.removeApp(appToDelete.value)
+    appToDelete.value = ''
+    showDeleteConfirm.value = false
   }
 }
 
@@ -207,13 +263,38 @@ h2, h3 {
 }
 
 .app-item {
-  padding: 10px 15px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   border-radius: 4px;
   background-color: rgba(255, 255, 255, 0.8);
-  cursor: pointer;
   transition: all 0.3s;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
   color: #333;
+}
+
+.app-item-content {
+  flex: 1;
+  padding: 10px 15px;
+  cursor: pointer;
+}
+
+.delete-app-btn {
+  background: none;
+  border: none;
+  color: #999;
+  font-size: 18px;
+  cursor: pointer;
+  padding: 0 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  transition: all 0.2s;
+}
+
+.delete-app-btn:hover {
+  color: #ff4d4d;
 }
 
 .app-item:hover {
@@ -223,6 +304,17 @@ h2, h3 {
 
 .app-item.active {
   background-color: var(--primary-color);
+}
+
+.app-item.active .app-item-content {
+  color: white;
+}
+
+.app-item.active .delete-app-btn {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.app-item.active .delete-app-btn:hover {
   color: white;
 }
 
@@ -231,6 +323,8 @@ h2, h3 {
   background-color: transparent;
   text-align: center;
   color: var(--text-color);
+  cursor: pointer;
+  padding: 10px 15px;
 }
 
 .no-app {
@@ -249,7 +343,7 @@ h2, h3 {
   height: 100%;
 }
 
-.add-app-form {
+.add-app-form, .delete-confirm-dialog {
   position: fixed;
   top: 0;
   left: 0;
@@ -262,7 +356,7 @@ h2, h3 {
   z-index: 1000;
 }
 
-.form-content {
+.form-content, .dialog-content {
   background-color: var(--background-color);
   padding: 30px;
   border-radius: 8px;
@@ -281,6 +375,13 @@ h2, h3 {
   font-weight: bold;
 }
 
+.form-group small {
+  display: block;
+  color: #666;
+  margin-top: 5px;
+  font-size: 0.8rem;
+}
+
 .form-group input {
   width: 100%;
   padding: 8px 12px;
@@ -290,14 +391,14 @@ h2, h3 {
   color: var(--text-color);
 }
 
-.form-actions {
+.form-actions, .dialog-actions {
   display: flex;
   justify-content: flex-end;
   gap: 10px;
   margin-top: 20px;
 }
 
-.form-actions button {
+.form-actions button, .dialog-actions button {
   padding: 8px 16px;
   border-radius: 4px;
   border: 1px solid rgba(0, 0, 0, 0.1);
@@ -310,6 +411,17 @@ h2, h3 {
   background-color: var(--primary-color);
   color: white;
   border-color: var(--primary-color);
+}
+
+.form-actions button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.dialog-actions button.danger {
+  background-color: #ff4d4d;
+  color: white;
+  border-color: #ff4d4d;
 }
 
 /* 暗黑主题适配 */
@@ -340,7 +452,12 @@ h2, h3 {
   border-color: rgba(255, 255, 255, 0.1);
 }
 
-:root[data-theme="dark"] .form-actions button {
+:root[data-theme="dark"] .form-group small {
+  color: #aaa;
+}
+
+:root[data-theme="dark"] .form-actions button,
+:root[data-theme="dark"] .dialog-actions button {
   background-color: rgba(0, 0, 0, 0.2);
   border-color: rgba(255, 255, 255, 0.1);
 }

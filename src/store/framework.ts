@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import type { FrameworkState, UserInfo, SubApp } from '../types/framework'
+import axios from 'axios'
 
 // 定义框架级别的store
 export const useFrameworkStore = defineStore('framework', {
@@ -20,6 +21,9 @@ export const useFrameworkStore = defineStore('framework', {
     // 系统状态
     isLoading: false, // 全局加载状态
     systemMessages: [], // 系统消息
+    
+    // 配置相关
+    configLoaded: false, // 配置是否已加载
   }),
   
   // getters
@@ -111,6 +115,59 @@ export const useFrameworkStore = defineStore('framework', {
       if (document && document.documentElement) {
         document.documentElement.setAttribute('data-theme', this.currentTheme)
       }
+    },
+    
+    // 从配置文件加载默认应用
+    async loadDefaultApps(): Promise<void> {
+      if (this.configLoaded) return;
+      
+      try {
+        this.setLoading(true);
+        const response = await axios.get('/config.json');
+        const config = response.data;
+        
+        // 如果本地没有应用，则加载默认应用
+        if (this.subApps.length === 0 && config.defaultApps) {
+          config.defaultApps.forEach((app: SubApp) => {
+            this.registerSubApp(app);
+          });
+          
+          // 如果有应用，默认激活第一个
+          if (this.subApps.length > 0 && !this.currentApp) {
+            this.activateApp(this.subApps[0].name);
+          }
+        }
+        
+        this.configLoaded = true;
+        this.addSystemMessage('应用配置加载成功');
+      } catch (error) {
+        console.error('加载配置文件失败:', error);
+        this.addSystemMessage('加载配置文件失败，请检查网络连接');
+      } finally {
+        this.setLoading(false);
+      }
+    },
+    
+    // 删除应用
+    removeApp(appName: string): void {
+      const index = this.subApps.findIndex(app => app.name === appName);
+      if (index !== -1) {
+        // 如果删除的是当前激活的应用，则需要重新激活其他应用
+        if (this.currentApp && this.currentApp.name === appName) {
+          this.currentApp = null;
+          // 如果还有其他应用，则激活第一个
+          if (this.subApps.length > 1) {
+            const nextApp = this.subApps.find(app => app.name !== appName);
+            if (nextApp) {
+              this.activateApp(nextApp.name);
+            }
+          }
+        }
+        
+        // 删除应用
+        this.subApps.splice(index, 1);
+        this.addSystemMessage(`应用 ${appName} 已删除`);
+      }
     }
   },
   
@@ -118,6 +175,6 @@ export const useFrameworkStore = defineStore('framework', {
   persist: {
     key: 'framework-store',
     storage: localStorage,
-    paths: ['currentTheme', 'sidebarCollapsed', 'userInfo', 'isLoggedIn']
+    paths: ['currentTheme', 'sidebarCollapsed', 'userInfo', 'isLoggedIn', 'subApps', 'currentApp']
   }
 }) 

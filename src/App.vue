@@ -39,10 +39,13 @@ const toggleSidebar = () => {
   store.toggleSidebar()
 }
 
-// 在组件挂载后初始化主题
-onMounted(() => {
+// 在组件挂载后初始化
+onMounted(async () => {
   // 确保从持久化存储恢复的主题设置被应用到DOM
   store.initTheme()
+  
+  // 加载默认应用配置
+  await store.loadDefaultApps()
 })
 </script>
 

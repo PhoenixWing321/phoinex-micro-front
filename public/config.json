@@ -1,0 +1,19 @@
+{
+  "defaultApps": [
+    {
+      "name": "百度",
+      "entry": "https://www.baidu.com",
+      "container": "baidu-container"
+    },
+    {
+      "name": "CSDN",
+      "entry": "https://www.csdn.net",
+      "container": "csdn-container"
+    },
+    {
+      "name": "Gitee",
+      "entry": "https://gitee.com",
+      "container": "gitee-container"
+    }
+  ]
+} 
