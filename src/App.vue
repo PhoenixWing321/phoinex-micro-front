@@ -27,6 +27,7 @@
 </template>
 
 <script setup lang="ts">
+import { onMounted } from 'vue'
 import { useFrameworkStore } from './store/framework'
 import FrameworkHeader from './components/FrameworkHeader.vue'
 import UserPanel from './components/UserPanel.vue'
@@ -37,6 +38,12 @@ const store = useFrameworkStore()
 const toggleSidebar = () => {
   store.toggleSidebar()
 }
+
+// 在组件挂载后初始化主题
+onMounted(() => {
+  // 确保从持久化存储恢复的主题设置被应用到DOM
+  store.initTheme()
+})
 </script>
 
 <style>

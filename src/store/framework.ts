@@ -103,10 +103,18 @@ export const useFrameworkStore = defineStore('framework', {
     // 清除所有消息
     clearAllMessages(): void {
       this.systemMessages = []
+    },
+    
+    // 初始化主题
+    initTheme(): void {
+      // 确保DOM加载后再设置主题
+      if (document && document.documentElement) {
+        document.documentElement.setAttribute('data-theme', this.currentTheme)
+      }
     }
   },
   
-  // 持久化配置 - 正确的格式
+  // 持久化配置
   persist: {
     key: 'framework-store',
     storage: localStorage,
