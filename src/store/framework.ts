@@ -41,11 +41,11 @@ export const useFrameworkStore = defineStore('framework', {
       this.sidebarCollapsed = !this.sidebarCollapsed
     },
     
-    // 设置主题
-    setTheme(theme: 'light' | 'dark'): void {
-      this.currentTheme = theme
-      // 可以在这里添加更改DOM主题类的逻辑
-      document.documentElement.setAttribute('data-theme', theme)
+    // 切换主题
+    toggleTheme() {
+      this.currentTheme = this.currentTheme === 'light' ? 'dark' : 'light'
+      // 更新根元素的data-theme属性
+      document.documentElement.setAttribute('data-theme', this.currentTheme)
     },
     
     // 设置用户信息并登录

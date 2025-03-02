@@ -1,6 +1,8 @@
 <template>
   <div class="about">
-    <h1>关于</h1>
+    <div class="about-header">
+      <h1>关于</h1>
+    </div>
     <div class="about-content">
       <h2>微前端框架</h2>
       <p>这是一个基于Vite + Vue3 + Wujie的微前端框架。</p>
@@ -26,17 +28,42 @@
   </div>
 </template>
 
+<script setup lang="ts">
+import { useFrameworkStore } from '../store/framework'
+
+const store = useFrameworkStore()
+</script>
+
 <style scoped>
 .about {
-  max-width: 800px;
-  margin: 0 auto;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  margin-left: 0; /* 确保没有左侧margin */
+}
+
+.about-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+h1 {
+  font-size: 1.8rem;
+  color: var(--text-color);
+  margin: 0;
 }
 
 .about-content {
-  margin-top: 20px;
-  padding: 20px;
+  padding: 25px;
   background-color: rgba(0, 0, 0, 0.02);
   border-radius: 8px;
+  flex: 1;
+  overflow-y: auto;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  color: var(--text-color);
 }
 
 h2 {
@@ -46,6 +73,7 @@ h2 {
 
 h3 {
   margin: 20px 0 10px;
+  color: var(--text-color);
 }
 
 p {
@@ -63,7 +91,14 @@ li {
   line-height: 1.5;
 }
 
+strong {
+  color: var(--primary-color);
+  font-weight: 600;
+}
+
+/* 暗黑主题适配 */
 :root[data-theme="dark"] .about-content {
-  background-color: rgba(255, 255, 255, 0.05);
+  background-color: rgba(255, 255, 255, 0.03);
+  border-color: rgba(255, 255, 255, 0.1);
 }
 </style> 
