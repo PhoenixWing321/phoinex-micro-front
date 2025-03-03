@@ -26,14 +26,16 @@
       "icon": "🏠",
       "type": "route",
       "path": "/",
+      "openMode": "mdi",
       "order": 1
     },
     {
       "id": "app-manager",
       "name": "应用管理",
       "icon": "📱",
-      "type": "function",
-      "action": "openAppManager",
+      "type": "rote",
+      "path": "/app-manager",
+      "openMode": "drawer",
       "order": 2
     },
     {
@@ -42,6 +44,7 @@
       "icon": "ℹ️",
       "type": "route",
       "path": "/about",
+      "openMode": "drawer",
       "order": 3
     }
   ],

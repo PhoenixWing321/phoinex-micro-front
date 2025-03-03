@@ -93,18 +93,7 @@ Phoenix微前端框架支持多种应用打开方式，可以根据不同应用�
       "container": "baidu-container",
       "openMode": "drawer"
     },
-    {
-      "name": "CSDN",
-      "entry": "https://www.csdn.net",
-      "container": "csdn-container",
-      "openMode": "blank"
-    },
-    {
-      "name": "Gitee",
-      "entry": "https://gitee.com",
-      "container": "gitee-container",
-      "openMode": "mdi"
-    }
+    ...
   ]
 }
 ```
@@ -132,22 +121,7 @@ Phoenix微前端框架支持通过配置文件定义主菜单结构，使菜单�
       "path": "/",
       "order": 1
     },
-    {
-      "id": "app-manager",
-      "name": "应用管理",
-      "icon": "📱",
-      "type": "function",
-      "action": "openAppManager",
-      "order": 2
-    },
-    {
-      "id": "about",
-      "name": "关于",
-      "icon": "ℹ️",
-      "type": "route",
-      "path": "/about",
-      "order": 3
-    }
+    ...
   ]
 }
 ```

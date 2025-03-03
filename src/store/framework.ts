@@ -142,7 +142,6 @@ export const useFrameworkStore = defineStore('framework', {
     executeMenuAction(actionName: string): void {
       // 使用类型安全的方式调用动作
       const actionMap: Record<string, () => void> = {
-        openAppManager: this.openAppManager,
         toggleTheme: this.toggleTheme,
         toggleSidebar: this.toggleSidebar,
         // 可以添加更多动作映射
@@ -222,11 +221,6 @@ export const useFrameworkStore = defineStore('framework', {
         this.addSystemMessage(`应用 ${appName} 已删除`);
       }
     },
-    
-    // 打开应用管理器
-    openAppManager(): void {
-      this.setShowDrawer(true);
-    }
   },
   
   // 持久化配置

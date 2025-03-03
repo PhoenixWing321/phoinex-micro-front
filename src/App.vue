@@ -1,33 +1,35 @@
 <template>
-  <div class="app-container" :data-theme="store.currentTheme">
+  <div v-if="isStandalonePage" class="standalone-container" :data-theme="store.currentTheme">
+    <router-view />
+  </div>
+  <div v-else class="app-container" :data-theme="store.currentTheme">
     <!-- 左侧边栏 -->
     <div class="sidebar" :class="{ 'collapsed': store.sidebarCollapsed }">
       <!-- 顶部标题和控制区 -->
       <FrameworkHeader @toggle-sidebar="toggleSidebar" />
-      
+
       <button @click="toggleSidebar" class="toggle-btn">
-        {{ store.sidebarCollapsed ? '>' : '<' }}
-      </button>
-      
-      <!-- 中间导航区 -->
-      <nav>
-        <template v-for="item in store.sortedMainMenu" :key="item.id">
-          <a @click="executeMenuAction(item)" class="nav-link">
-            <i class="nav-icon">{{ item.icon }}</i>
-            <span class="nav-text">{{ item.name }}</span>
-          </a>
-        </template>
-      </nav>
-      
-      <!-- 底部用户区 -->
-      <UserPanel />
+        {{ store.sidebarCollapsed ? '>' : '<' }} </button>
+
+          <!-- 中间导航区 -->
+          <nav>
+            <template v-for="item in store.sortedMainMenu" :key="item.id">
+              <a @click="executeMenuAction(item)" class="nav-link">
+                <i class="nav-icon">{{ item.icon }}</i>
+                <span class="nav-text">{{ item.name }}</span>
+              </a>
+            </template>
+          </nav>
+
+          <!-- 底部用户区 -->
+          <UserPanel />
     </div>
-    
+
     <!-- 右侧内容区 -->
     <div class="content-wrapper">
       <router-view />
     </div>
-    
+
     <!-- 应用抽屉 -->
     <div class="app-drawer" :class="{ 'drawer-open': store.showDrawer }">
       <div class="drawer-header">
@@ -35,45 +37,52 @@
         <button @click="closeDrawer" class="close-drawer">×</button>
       </div>
       <div class="drawer-content">
+        <!-- 路由内容 -->
+        <DrawerRouteView v-if="drawerType === 'route'" :path="drawerRoutePath" :hide-header="true" />
+
         <!-- 应用管理内容 -->
-        <div v-if="drawerType === 'app-manager'" class="drawer-app-manager">
-          <AppManager @open-app="openAppInDrawer" />
-        </div>
-        
+        <AppManager v-else-if="drawerType === 'app-manager'" @open-app="openAppInDrawer" class="drawer-app-manager" :hide-header="true" />
+
         <!-- 无界应用容器 -->
-        <div v-else-if="drawerType === 'wujie-app' && store.currentApp" :id="store.currentApp.container" class="wujie-container-app"></div>
-        
+        <div v-else-if="drawerType === 'wujie-app' && store.currentApp" :id="store.currentApp.container"
+          class="wujie-container-app"></div>
+
         <div v-else class="no-app-selected">
           请选择一个应用
         </div>
       </div>
     </div>
-    
+
     <!-- 抽屉遮罩层 -->
-    <div 
-      v-if="store.showDrawer" 
-      class="drawer-overlay"
-      @click="closeDrawer"
-    ></div>
+    <div v-if="store.showDrawer" class="drawer-overlay" @click="closeDrawer"></div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref, watch, onBeforeUnmount } from 'vue'
-import { useRouter } from 'vue-router'
+import { onMounted, ref, watch, onBeforeUnmount, computed } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
 import { useFrameworkStore } from './store/framework'
 import FrameworkHeader from './components/FrameworkHeader.vue'
 import UserPanel from './components/UserPanel.vue'
 import AppManager from './views/AppManager.vue'
+import DrawerRouteView from './components/DrawerRouteView.vue'
 import type { SubApp, MenuItem } from './types/framework'
 import WujieVue from 'wujie-vue3'
 
 const { setupApp, preloadApp, startApp } = WujieVue
 const router = useRouter()
+const route = useRoute()
 
 const store = useFrameworkStore()
-const drawerType = ref<'app-manager' | 'wujie-app' | null>(null)
+const drawerType = ref<'app-manager' | 'wujie-app' | 'route' | null>(null)
 const drawerTitle = ref('')
+const drawerRouteName = ref('')
+const drawerRoutePath = ref('')
+
+// 判断当前是否为独立页面
+const isStandalonePage = computed(() => {
+  return route.meta.standalone === true
+})
 
 // 组件挂载时初始化
 onMounted(() => {
@@ -86,32 +95,44 @@ const toggleSidebar = () => {
   store.toggleSidebar()
 }
 
-// 打开应用管理抽屉
-const openAppManager = () => {
-  drawerType.value = 'app-manager'
-  drawerTitle.value = '应用管理'
+
+// 在抽屉中打开路由
+const openRouteInDrawer = (routePath: string, title: string) => {
+  console.log('在抽屉中打开路由:', routePath)
+  drawerType.value = 'route'
+  drawerTitle.value = title
+  drawerRoutePath.value = routePath
   store.setShowDrawer(true)
 }
 
 // 执行菜单动作
 const executeMenuAction = (item: MenuItem) => {
-  if (item.type === 'route') {
-    // 路由跳转
-    router.push(item.path || '/')
+  console.log('执行菜单动作:', item)
+
+  // 根据打开方式处理
+  if (item.openMode === 'drawer') {
+
+    // 在抽屉中打开路由
+    openRouteInDrawer(item.path || '/about', item.name)
+
+    // TODO Clear store.executeMenuAction(item.action)
+
+  } else if (item.openMode === 'mdi') {
+
     closeDrawer() // 关闭抽屉
-  } else if (item.type === 'function' && item.action) {
-    // 执行函数
-    store.executeMenuAction(item.action)
-  } else if (item.type === 'link' && item.url) {
-    // 打开外部链接
-    window.open(item.url, '_blank')
+    // MDI模式处理
+    console.log('MDI模式打开:', item.name)
+    // TODO: 实现MDI模式
+  } else { // if (item.openMode === 'blank')
+    window.open(item.path, '_blank')
   }
+
 }
 
 // 在抽屉中打开应用
 const openAppInDrawer = (app: SubApp) => {
   store.activateApp(app.name)
-  
+
   // 根据应用的打开方式决定如何打开
   if (app.openMode === 'blank') {
     // 在新窗口中打开
@@ -123,12 +144,12 @@ const openAppInDrawer = (app: SubApp) => {
     // 这里可以添加MDI管理器的打开逻辑
     return
   }
-  
+
   // 默认在抽屉中打开
   drawerType.value = 'wujie-app'
   drawerTitle.value = app.name
   store.setShowDrawer(true)
-  
+
   // 使用无界微前端加载应用
   setupApp({
     name: app.name,
@@ -136,13 +157,13 @@ const openAppInDrawer = (app: SubApp) => {
     exec: true,
     sync: true
   })
-  
+
   // 预加载应用
   preloadApp({
     name: app.name,
     url: app.entry
   })
-  
+
   // 启动应用
   setTimeout(() => {
     startApp({
@@ -157,9 +178,12 @@ const openAppInDrawer = (app: SubApp) => {
 // 关闭抽屉
 const closeDrawer = () => {
   store.setShowDrawer(false)
+  // 延迟清除抽屉类型，以便在关闭动画完成后再清除
   setTimeout(() => {
     drawerType.value = null
     drawerTitle.value = ''
+    drawerRouteName.value = ''
+    drawerRoutePath.value = ''
   }, 300)
 }
 
@@ -177,26 +201,33 @@ const handleOpenWujieApp = (event: CustomEvent) => {
 }
 
 const handleOpenAppManager = () => {
-  openAppManager()
+  openRouteInDrawer('/app-manager', '应用管理')
 }
 
 // 在组件挂载后初始化
 onMounted(async () => {
-  // 确保从持久化存储恢复的主题设置被应用到DOM
-  store.initTheme()
-  
   // 加载配置
   await store.loadConfig()
-  
+
   // 添加全局事件监听
   window.addEventListener('open-wujie-app', handleOpenWujieApp as EventListener)
   window.addEventListener('open-app-manager', handleOpenAppManager)
+
+  // 添加打开路由抽屉的全局事件
+  window.addEventListener('open-route-drawer', ((event: CustomEvent) => {
+    const { path, title } = event.detail
+    openRouteInDrawer(path, title)
+  }) as EventListener)
 })
 
 // 在组件卸载前移除事件监听
 onBeforeUnmount(() => {
   window.removeEventListener('open-wujie-app', handleOpenWujieApp as EventListener)
   window.removeEventListener('open-app-manager', handleOpenAppManager)
+  window.removeEventListener('open-route-drawer', ((event: CustomEvent) => {
+    const { path, title } = event.detail
+    openRouteInDrawer(path, title)
+  }) as EventListener)
 })
 </script>
 
@@ -224,7 +255,9 @@ onBeforeUnmount(() => {
   box-sizing: border-box;
 }
 
-html, body, #app {
+html,
+body,
+#app {
   width: 100%;
   height: 100%;
   margin: 0;
@@ -255,6 +288,15 @@ body {
   color: var(--text-color);
 }
 
+.standalone-container {
+  width: 100%;
+  height: 100vh;
+  overflow: auto;
+  background-color: var(--background-color);
+  color: var(--text-color);
+  padding: 20px;
+}
+
 .sidebar {
   width: var(--sidebar-width);
   height: 100%;
@@ -264,7 +306,8 @@ body {
   display: flex;
   flex-direction: column;
   border-right: 1px solid var(--border-color);
-  flex-shrink: 0; /* 防止侧边栏被压缩 */
+  flex-shrink: 0;
+  /* 防止侧边栏被压缩 */
   z-index: 10;
   position: absolute;
   left: 0;
@@ -300,7 +343,7 @@ body {
   background-color: var(--background-color);
 }
 
-.sidebar.collapsed ~ .content-wrapper {
+.sidebar.collapsed~.content-wrapper {
   margin-left: var(--sidebar-collapsed-width);
   width: calc(100% - var(--sidebar-collapsed-width));
 }
@@ -315,7 +358,8 @@ nav {
   flex: 1;
 }
 
-nav a, .nav-link {
+nav a,
+.nav-link {
   color: var(--text-color);
   text-decoration: none;
   padding: 10px 15px;
@@ -327,7 +371,9 @@ nav a, .nav-link {
   cursor: pointer;
 }
 
-nav a:hover, nav a.router-link-active, .nav-link:hover {
+nav a:hover,
+nav a.router-link-active,
+.nav-link:hover {
   background-color: var(--primary-color);
   color: white;
 }
@@ -344,7 +390,8 @@ nav a:hover, nav a.router-link-active, .nav-link:hover {
   flex: 1;
 }
 
-.sidebar.collapsed nav a, .sidebar.collapsed .nav-link {
+.sidebar.collapsed nav a,
+.sidebar.collapsed .nav-link {
   overflow: hidden;
   white-space: nowrap;
   padding: 10px 5px;

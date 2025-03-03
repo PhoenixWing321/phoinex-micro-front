@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory, RouteRecordRaw } from 'vue-router'
 import AppManager from '../views/AppManager.vue'
+import About from '../views/About.vue'
 
 // 定义路由
 const routes: Array<RouteRecordRaw> = [
@@ -11,12 +12,18 @@ const routes: Array<RouteRecordRaw> = [
   {
     path: '/about',
     name: 'About',
-    component: () => import('../views/About.vue')
+    component: About,
+    meta: {
+      standalone: true
+    }
   },
   {
     path: '/app-manager',
     name: 'AppManager',
-    component: AppManager
+    component: AppManager,
+    meta: {
+      standalone: true
+    }
   }
 ]
 

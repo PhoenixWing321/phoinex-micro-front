@@ -1,3 +1,10 @@
+
+
+// 应用打开方式
+export type OpenModeType = 'drawer' | 'blank' | 'mdi'; 
+
+// 菜单项类型
+export type MenuItemType = 'route' | 'function' | 'link';
 // 用户信息接口
 export interface UserInfo {
   username: string;
@@ -11,7 +18,7 @@ export interface SubApp {
   name: string;
   entry: string;
   container: string;
-  openMode?: 'drawer' | 'blank' | 'mdi'; // 应用打开方式
+  openMode?: OpenModeType; // 应用打开方式
   [key: string]: any; // 允许其他属性
 }
 
@@ -23,8 +30,6 @@ export interface SystemMessage {
   read: boolean;
 }
 
-// 菜单项类型
-export type MenuItemType = 'route' | 'function' | 'link';
 
 // 菜单项接口
 export interface MenuItem {
@@ -32,9 +37,8 @@ export interface MenuItem {
   name: string;
   icon: string;
   type: MenuItemType;
-  path?: string;
-  action?: string;
-  url?: string;
+  path: string;
+  openMode?: OpenModeType; // 应用打开方式
   order: number;
   children?: MenuItem[];
   [key: string]: any; // 允许其他属性

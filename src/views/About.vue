@@ -1,9 +1,9 @@
 <template>
   <div class="about">
-    <div class="about-header">
+    <div class="about-header" v-if="!hideHeader">
       <h1>关于</h1>
     </div>
-    <div class="about-content">
+    <div class="about-content" :class="{ 'no-header': hideHeader }">
       <h2>微前端框架</h2>
       <p>这是一个基于Vite + Vue3 + Wujie的微前端框架。</p>
       
@@ -30,6 +30,10 @@
 
 <script setup lang="ts">
 import { useFrameworkStore } from '../store/framework'
+
+const props = defineProps<{
+  hideHeader?: boolean
+}>()
 
 const store = useFrameworkStore()
 </script>
@@ -64,6 +68,11 @@ h1 {
   overflow-y: auto;
   border: 1px solid rgba(0, 0, 0, 0.1);
   color: var(--text-color);
+}
+
+.about-content.no-header {
+  margin-top: 0;
+  padding-top: 15px;
 }
 
 h2 {

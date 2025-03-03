@@ -1,10 +1,10 @@
 <template>
   <div class="app-manager">
-    <div class="app-manager-header">
+    <div class="app-manager-header" v-if="!hideHeader">
       <h1>应用管理</h1>
     </div>
     
-    <div class="app-manager-container">
+    <div class="app-manager-container" :class="{ 'no-header': hideHeader }">
       <div class="app-list-section">
         <h2>微前端应用列表</h2>
         <div class="app-list">
@@ -108,10 +108,14 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, defineEmits } from 'vue'
+import { ref, computed, defineEmits, defineProps } from 'vue'
 import { useFrameworkStore } from '../store/framework'
 import { useRouter } from 'vue-router'
 import type { SubApp } from '../types/framework'
+
+const props = defineProps<{
+  hideHeader?: boolean
+}>()
 
 const emit = defineEmits(['open-app'])
 const store = useFrameworkStore()
@@ -534,5 +538,10 @@ h2, h3 {
   .app-detail-section {
     height: 60%;
   }
+}
+
+.app-manager-container.no-header {
+  height: 100%;
+  margin-top: 0;
 }
 </style> 
