@@ -38,11 +38,20 @@
     {
       "id": "app-manager",
       "name": "应用管理",
-      "icon": "📱",
+      "icon": "📦", 
       "type": "rote",
       "path": "/app-manager",
       "openMode": "drawer",
       "order": 2
+    },
+    {
+      "id": "drawing-board", 
+      "name": "绘画板",
+      "icon": "🎨", 
+      "type": "rote",
+      "path": "/drawing-board",
+      "openMode": "route",
+      "order": 3
     },
     {
       "id": "about",
@@ -51,7 +60,7 @@
       "type": "route",
       "path": "/about",
       "openMode": "drawer",
-      "order": 3
+      "order": 4
     }
   ],
   "openModes": [

@@ -24,6 +24,14 @@ const routes: Array<RouteRecordRaw> = [
     meta: {
       standalone: true
     }
+  },
+  {
+    path: '/drawing-board',
+    name: 'DrawingBoard',
+    component: () => import('../views/DrawingBoard/index.vue'),
+    meta: {
+      title: '画板'
+    }
   }
 ]
 
