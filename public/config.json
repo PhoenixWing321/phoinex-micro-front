@@ -18,5 +18,49 @@
       "container": "gitee-container",
       "openMode": "mdi"
     }
+  ],
+  "mainMenu": [
+    {
+      "id": "home",
+      "name": "首页",
+      "icon": "🏠",
+      "type": "route",
+      "path": "/",
+      "order": 1
+    },
+    {
+      "id": "app-manager",
+      "name": "应用管理",
+      "icon": "📱",
+      "type": "function",
+      "action": "openAppManager",
+      "order": 2
+    },
+    {
+      "id": "about",
+      "name": "关于",
+      "icon": "ℹ️",
+      "type": "route",
+      "path": "/about",
+      "order": 3
+    }
+  ],
+  "openModes": [
+    {
+      "id": "drawer",
+      "name": "抽屉中打开",
+      "description": "在右侧抽屉中打开应用，不离开当前页面",
+      "isDefault": true
+    },
+    {
+      "id": "blank",
+      "name": "新窗口打开",
+      "description": "在新浏览器标签页中打开应用"
+    },
+    {
+      "id": "mdi",
+      "name": "MDI管理器中打开",
+      "description": "在应用内部的MDI管理器中打开多个应用窗口"
+    }
   ]
 } 

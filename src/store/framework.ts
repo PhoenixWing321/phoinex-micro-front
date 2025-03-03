@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import type { FrameworkState, UserInfo, SubApp } from '../types/framework'
+import type { FrameworkState, UserInfo, SubApp, MenuItem, OpenMode } from '../types/framework'
 
 // 定义框架级别的store
 export const useFrameworkStore = defineStore('framework', {
@@ -24,6 +24,8 @@ export const useFrameworkStore = defineStore('framework', {
     
     // 配置相关
     configLoaded: false, // 配置是否已加载
+    mainMenu: [] as MenuItem[], // 主菜单配置
+    openModes: [] as OpenMode[], // 打开方式配置
   }),
   
   // getters
@@ -36,6 +38,20 @@ export const useFrameworkStore = defineStore('framework', {
     
     // 获取当前激活的子应用名称
     currentAppName: (state): string => state.currentApp?.name || '',
+    
+    // 获取排序后的主菜单
+    sortedMainMenu: (state): MenuItem[] => {
+      // 确保mainMenu是数组
+      const menu = state.mainMenu || [];
+      return [...menu].sort((a, b) => a.order - b.order);
+    },
+    
+    // 获取默认的打开方式
+    defaultOpenMode: (state): OpenMode | undefined => {
+      // 确保openModes是数组
+      const modes = state.openModes || [];
+      return modes.find(mode => mode.isDefault === true);
+    },
   },
   
   // actions
@@ -122,8 +138,25 @@ export const useFrameworkStore = defineStore('framework', {
       this.showDrawer = status
     },
     
-    // 从配置文件加载默认应用 - 使用 fetch 替代 axios
-    async loadDefaultApps(): Promise<void> {
+    // 执行菜单动作
+    executeMenuAction(actionName: string): void {
+      // 使用类型安全的方式调用动作
+      const actionMap: Record<string, () => void> = {
+        openAppManager: this.openAppManager,
+        toggleTheme: this.toggleTheme,
+        toggleSidebar: this.toggleSidebar,
+        // 可以添加更多动作映射
+      };
+      
+      if (actionMap[actionName]) {
+        actionMap[actionName]();
+      } else {
+        console.warn(`未找到菜单动作: ${actionName}`);
+      }
+    },
+    
+    // 从配置文件加载默认应用和菜单配置
+    async loadConfig(): Promise<void> {
       if (this.configLoaded) return;
       
       try {
@@ -136,7 +169,7 @@ export const useFrameworkStore = defineStore('framework', {
         
         const config = await response.json();
         
-        // 如果本地没有应用，则加载默认应用
+        // 加载默认应用
         if (this.subApps.length === 0 && config.defaultApps) {
           config.defaultApps.forEach((app: SubApp) => {
             this.registerSubApp(app);
@@ -148,8 +181,18 @@ export const useFrameworkStore = defineStore('framework', {
           }
         }
         
+        // 加载主菜单配置
+        if (config.mainMenu) {
+          this.mainMenu = config.mainMenu;
+        }
+        
+        // 加载打开方式配置
+        if (config.openModes) {
+          this.openModes = config.openModes;
+        }
+        
         this.configLoaded = true;
-        this.addSystemMessage('应用配置加载成功');
+        this.addSystemMessage('配置加载成功');
       } catch (error) {
         console.error('加载配置文件失败:', error);
         this.addSystemMessage('加载配置文件失败，请检查网络连接');
@@ -178,6 +221,11 @@ export const useFrameworkStore = defineStore('framework', {
         this.subApps.splice(index, 1);
         this.addSystemMessage(`应用 ${appName} 已删除`);
       }
+    },
+    
+    // 打开应用管理器
+    openAppManager(): void {
+      this.setShowDrawer(true);
     }
   },
   
@@ -185,6 +233,6 @@ export const useFrameworkStore = defineStore('framework', {
   persist: {
     key: 'framework-store',
     storage: localStorage,
-    paths: ['currentTheme', 'sidebarCollapsed', 'userInfo', 'isLoggedIn', 'subApps', 'currentApp', 'showDrawer']
+    paths: ['currentTheme', 'sidebarCollapsed', 'userInfo', 'isLoggedIn', 'subApps', 'currentApp', 'showDrawer', 'mainMenu', 'openModes']
   }
 }) 

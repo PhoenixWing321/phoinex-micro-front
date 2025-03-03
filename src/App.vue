@@ -11,18 +11,12 @@
       
       <!-- 中间导航区 -->
       <nav>
-        <router-link to="/" @click="closeDrawer">
-          <i class="nav-icon">🏠</i>
-          <span class="nav-text">首页</span>
-        </router-link>
-        <a @click="openAppManager" class="nav-link">
-          <i class="nav-icon">📱</i>
-          <span class="nav-text">应用管理</span>
-        </a>
-        <router-link to="/about" @click="closeDrawer">
-          <i class="nav-icon">ℹ️</i>
-          <span class="nav-text">关于</span>
-        </router-link>
+        <template v-for="item in store.sortedMainMenu" :key="item.id">
+          <a @click="executeMenuAction(item)" class="nav-link">
+            <i class="nav-icon">{{ item.icon }}</i>
+            <span class="nav-text">{{ item.name }}</span>
+          </a>
+        </template>
       </nav>
       
       <!-- 底部用户区 -->
@@ -66,18 +60,26 @@
 
 <script setup lang="ts">
 import { onMounted, ref, watch, onBeforeUnmount } from 'vue'
+import { useRouter } from 'vue-router'
 import { useFrameworkStore } from './store/framework'
 import FrameworkHeader from './components/FrameworkHeader.vue'
 import UserPanel from './components/UserPanel.vue'
 import AppManager from './views/AppManager.vue'
-import type { SubApp } from './types/framework'
+import type { SubApp, MenuItem } from './types/framework'
 import WujieVue from 'wujie-vue3'
 
 const { setupApp, preloadApp, startApp } = WujieVue
+const router = useRouter()
 
 const store = useFrameworkStore()
 const drawerType = ref<'app-manager' | 'wujie-app' | null>(null)
 const drawerTitle = ref('')
+
+// 组件挂载时初始化
+onMounted(() => {
+  // 初始化主题
+  store.initTheme()
+})
 
 // 切换侧边栏状态
 const toggleSidebar = () => {
@@ -89,6 +91,21 @@ const openAppManager = () => {
   drawerType.value = 'app-manager'
   drawerTitle.value = '应用管理'
   store.setShowDrawer(true)
+}
+
+// 执行菜单动作
+const executeMenuAction = (item: MenuItem) => {
+  if (item.type === 'route') {
+    // 路由跳转
+    router.push(item.path || '/')
+    closeDrawer() // 关闭抽屉
+  } else if (item.type === 'function' && item.action) {
+    // 执行函数
+    store.executeMenuAction(item.action)
+  } else if (item.type === 'link' && item.url) {
+    // 打开外部链接
+    window.open(item.url, '_blank')
+  }
 }
 
 // 在抽屉中打开应用
@@ -168,8 +185,8 @@ onMounted(async () => {
   // 确保从持久化存储恢复的主题设置被应用到DOM
   store.initTheme()
   
-  // 加载默认应用配置
-  await store.loadDefaultApps()
+  // 加载配置
+  await store.loadConfig()
   
   // 添加全局事件监听
   window.addEventListener('open-wujie-app', handleOpenWujieApp as EventListener)

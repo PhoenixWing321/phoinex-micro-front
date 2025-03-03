@@ -113,6 +113,87 @@ Phoenix微前端框架支持多种应用打开方式，可以根据不同应用�
 
 用户可以在应用管理界面中为每个应用选择不同的打开方式，系统会记住这些设置并在下次打开时应用。
 
+## 主菜单配置
+
+Phoenix微前端框架支持通过配置文件定义主菜单结构，使菜单项可配置化：
+
+### 菜单数据结构
+
+在`config.json`中配置主菜单：
+
+```json
+{
+  "mainMenu": [
+    {
+      "id": "home",
+      "name": "首页",
+      "icon": "🏠",
+      "type": "route",
+      "path": "/",
+      "order": 1
+    },
+    {
+      "id": "app-manager",
+      "name": "应用管理",
+      "icon": "📱",
+      "type": "function",
+      "action": "openAppManager",
+      "order": 2
+    },
+    {
+      "id": "about",
+      "name": "关于",
+      "icon": "ℹ️",
+      "type": "route",
+      "path": "/about",
+      "order": 3
+    }
+  ]
+}
+```
+
+### 菜单项属性说明
+
+- **id**: 菜单项唯一标识符
+- **name**: 显示的菜单名称
+- **icon**: 菜单图标（支持emoji或图标类名）
+- **type**: 菜单类型
+  - `route`: 路由跳转类型，点击后跳转到指定路由
+  - `function`: 函数调用类型，点击后调用指定函数
+  - `link`: 链接类型，点击后打开外部链接
+- **path**: 路由路径（当type为route时使用）
+- **action**: 函数名称（当type为function时使用）
+- **url**: 外部链接地址（当type为link时使用）
+- **order**: 菜单排序序号
+- **children**: 子菜单项（支持嵌套菜单）
+
+### 打开方式配置
+
+系统支持的应用打开方式也可在配置文件中定义：
+
+```json
+{
+  "openModes": [
+    {
+      "id": "drawer",
+      "name": "抽屉中打开",
+      "description": "在右侧抽屉中打开应用，不离开当前页面",
+      "isDefault": true
+    },
+    {
+      "id": "blank",
+      "name": "新窗口打开",
+      "description": "在新浏览器标签页中打开应用"
+    },
+    {
+      "id": "mdi",
+      "name": "MDI管理器中打开",
+      "description": "在应用内部的MDI管理器中打开多个应用窗口"
+    }
+  ]
+}
+```
+
 ## 技术栈
 
 - Vite
