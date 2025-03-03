@@ -27,7 +27,54 @@
 
     <!-- 右侧内容区 -->
     <div class="content-wrapper">
-      <router-view />
+      <!-- 路由视图 -->
+      <div v-show="!showMdiContainer">
+        <router-view />
+      </div>
+
+      <!-- MDI容器 -->
+      <div v-show="showMdiContainer" class="mdi-container">
+        <!-- 无界应用容器 - MDI模式 -->
+        <div class="mdi-tabs">
+          <button class="mdi-tab-home" @click="showHome">
+            <i class="nav-icon">🏠</i>
+            <span>首页</span>
+          </button>
+          <div class="mdi-tab-divider"></div>
+          <div class="mdi-tab-list">
+            <button v-for="app in store.mdiApps" 
+                    :key="app.name"
+                    class="mdi-tab"
+                    :class="{ 'active': app.name === store.currentAppName }"
+                    @click="activateApp(app.name)">
+              <span class="mdi-tab-title">{{ app.name }}</span>
+              <span class="mdi-tab-close" @click.stop="closeMdiApp(app.name)">×</span>
+            </button>
+          </div>
+        </div>
+        <div v-for="(app, index) in store.mdiApps" 
+             :key="app.name" 
+             :id="app.container" 
+             class="wujie-container-mdi"
+             :class="{ 'active': app.name === store.currentAppName }"
+             :style="{ 
+               top: 40 + index * 30 + 'px', 
+               left: index * 30 + 'px', 
+               zIndex: app.name === store.currentAppName ? 100 : 10 + index 
+             }">
+          <div class="mdi-window-header">
+            <span class="mdi-window-title">{{ app.name }}</span>
+            <button class="mdi-window-close" @click="closeMdiApp(app.name)">×</button>
+          </div>
+          <div class="mdi-window-content"></div>
+        </div>
+        
+        <!-- 无应用时的提示 -->
+        <div v-if="store.mdiApps.length === 0" class="no-mdi-apps">
+          <p>没有打开的应用</p>
+          <button @click="openAppManager" class="open-app-btn">打开应用</button>
+        </div>
+      </div>
     </div>
 
     <!-- 应用抽屉 -->
@@ -39,22 +86,17 @@
       <div class="drawer-content">
         <!-- 路由内容 -->
         <DrawerRouteView v-if="drawerType === 'route'" :path="drawerRoutePath" :hide-header="true" />
-
-        <!-- 应用管理内容 -->
-        <AppManager v-else-if="drawerType === 'app-manager'" @open-app="openAppInDrawer" class="drawer-app-manager" :hide-header="true" />
-
-        <!-- 无界应用容器 -->
-        <div v-else-if="drawerType === 'wujie-app' && store.currentApp" :id="store.currentApp.container"
-          class="wujie-container-app"></div>
-
         <div v-else class="no-app-selected">
-          请选择一个应用
+          drawerType= {{ drawerType }} 不正确
         </div>
       </div>
     </div>
 
     <!-- 抽屉遮罩层 -->
     <div v-if="store.showDrawer" class="drawer-overlay" @click="closeDrawer"></div>
+
+    <!-- 系统消息组件 -->
+    <SystemMessages />
   </div>
 </template>
 
@@ -66,18 +108,21 @@ import FrameworkHeader from './components/FrameworkHeader.vue'
 import UserPanel from './components/UserPanel.vue'
 import AppManager from './views/AppManager.vue'
 import DrawerRouteView from './components/DrawerRouteView.vue'
+import SystemMessages from './components/SystemMessages.vue'
 import type { SubApp, MenuItem } from './types/framework'
 import WujieVue from 'wujie-vue3'
 
-const { setupApp, preloadApp, startApp } = WujieVue
 const router = useRouter()
 const route = useRoute()
+
+const { setupApp } = WujieVue
 
 const store = useFrameworkStore()
 const drawerType = ref<'app-manager' | 'wujie-app' | 'route' | null>(null)
 const drawerTitle = ref('')
 const drawerRouteName = ref('')
 const drawerRoutePath = ref('')
+const showMdiContainer = ref(false)
 
 // 判断当前是否为独立页面
 const isStandalonePage = computed(() => {
@@ -107,72 +152,71 @@ const openRouteInDrawer = (routePath: string, title: string) => {
 
 // 执行菜单动作
 const executeMenuAction = (item: MenuItem) => {
-  console.log('执行菜单动作:', item)
 
   // 根据打开方式处理
   if (item.openMode === 'drawer') {
-
     // 在抽屉中打开路由
-    openRouteInDrawer(item.path || '/about', item.name)
-
-    // TODO Clear store.executeMenuAction(item.action)
-
+    openRouteInDrawer(item.path, item.name)
   } else if (item.openMode === 'mdi') {
-
     closeDrawer() // 关闭抽屉
     // MDI模式处理
-    console.log('MDI模式打开:', item.name)
-    // TODO: 实现MDI模式
-  } else { // if (item.openMode === 'blank')
+    if (store.currentApp) {
+      openAppInMdi(store.currentApp)
+    }
+  } else if (item.openMode === 'blank') {
     window.open(item.path, '_blank')
+  } else {
+    if (item.path) {
+      // 默认route打开，隐藏MDI容器
+      showMdiContainer.value = false;
+      router.push(item.path)
+    } else {
+      // 显示错误消息
+      store.addSystemMessage('没有路径', 'error')
+    }
   }
-
 }
 
 // 在抽屉中打开应用
 const openAppInDrawer = (app: SubApp) => {
+  // 所有应用都使用 MDI 模式打开
+  openAppInMdi(app)
+}
+
+// 在MDI中打开应用
+const openAppInMdi = (app: SubApp) => {
+  // 显示MDI容器
+  showMdiContainer.value = true
+  
+  // 添加到MDI应用列表
+  store.addMdiApp(app)
+  
+  // 激活应用
   store.activateApp(app.name)
-
-  // 根据应用的打开方式决定如何打开
-  if (app.openMode === 'blank') {
-    // 在新窗口中打开
-    window.open(app.entry, '_blank')
-    return
-  } else if (app.openMode === 'mdi') {
-    // 在MDI管理器中打开（这里需要根据实际MDI管理器的API进行调整）
-    console.log('在MDI管理器中打开:', app.name)
-    // 这里可以添加MDI管理器的打开逻辑
-    return
-  }
-
-  // 默认在抽屉中打开
-  drawerType.value = 'wujie-app'
-  drawerTitle.value = app.name
-  store.setShowDrawer(true)
-
+  
+  // 关闭抽屉
+  closeDrawer()
+  
   // 使用无界微前端加载应用
   setupApp({
     name: app.name,
     url: app.entry,
     exec: true,
-    sync: true
+    alive: true,
+    el: `#${app.container}`,
+    degrade: false,
+    fetch: (url, options) => {
+      // 处理跨域问题
+      if (url.includes('baidu.com') || url.includes('http://')) {
+        return window.fetch(url, {
+          ...options,
+          mode: 'no-cors',
+          credentials: 'omit'
+        });
+      }
+      return window.fetch(url, options);
+    }
   })
-
-  // 预加载应用
-  preloadApp({
-    name: app.name,
-    url: app.entry
-  })
-
-  // 启动应用
-  setTimeout(() => {
-    startApp({
-      name: app.name,
-      url: app.entry,
-      el: `#${app.container}`,
-      sync: true
-    })
-  }, 100)
 }
 
 // 关闭抽屉
@@ -212,6 +256,9 @@ onMounted(async () => {
   // 添加全局事件监听
   window.addEventListener('open-wujie-app', handleOpenWujieApp as EventListener)
   window.addEventListener('open-app-manager', handleOpenAppManager)
+  window.addEventListener('return-to-mdi', (() => {
+    showMdiContainer.value = true
+  }) as EventListener)
 
   // 添加打开路由抽屉的全局事件
   window.addEventListener('open-route-drawer', ((event: CustomEvent) => {
@@ -224,11 +271,46 @@ onMounted(async () => {
 onBeforeUnmount(() => {
   window.removeEventListener('open-wujie-app', handleOpenWujieApp as EventListener)
   window.removeEventListener('open-app-manager', handleOpenAppManager)
+  window.removeEventListener('return-to-mdi', (() => {
+    showMdiContainer.value = true
+  }) as EventListener)
   window.removeEventListener('open-route-drawer', ((event: CustomEvent) => {
     const { path, title } = event.detail
     openRouteInDrawer(path, title)
   }) as EventListener)
 })
+
+// 关闭MDI应用
+const closeMdiApp = (appName: string) => {
+  // 从MDI应用列表中移除
+  store.removeMdiApp(appName)
+  
+  // 如果没有应用了，显示首页
+  if (store.mdiApps.length === 0) {
+    showHome()
+  }
+}
+
+// 打开应用管理器
+const openAppManager = () => {
+  openRouteInDrawer('/app-manager', '应用管理')
+}
+
+// 添加显示首页的方法
+const showHome = () => {
+  showMdiContainer.value = false;
+  router.push('/');
+}
+
+// 添加返回MDI的方法
+const returnToMdi = () => {
+  showMdiContainer.value = true;
+}
+
+// 激活MDI应用
+const activateApp = (appName: string) => {
+  store.activateApp(appName)
+}
 </script>
 
 <style>
@@ -334,13 +416,17 @@ body {
 
 .content-wrapper {
   flex: 1;
-  padding: 20px;
-  overflow-y: auto;
   height: 100%;
   margin-left: var(--sidebar-width);
   transition: margin-left 0.3s;
   width: calc(100% - var(--sidebar-width));
   background-color: var(--background-color);
+  position: relative;
+}
+
+/* 路由视图容器 */
+.content-wrapper > div:first-child {
+  padding: 20px;
 }
 
 .sidebar.collapsed~.content-wrapper {
@@ -502,5 +588,295 @@ nav a.router-link-active,
     width: 100%;
     right: -100%;
   }
+}
+
+/* MDI容器样式 */
+.mdi-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--background-color);
+  overflow: hidden;
+}
+
+/* MDI标签栏 */
+.mdi-tabs {
+  position: sticky;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 40px;
+  background-color: var(--background-color);
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  padding: 0 4px;
+  gap: 0;
+  z-index: 2;
+  overflow-x: auto;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+/* MDI窗口样式 */
+.wujie-container-mdi {
+  position: absolute;
+  width: 60%;
+  height: calc(100% - 48px); /* 40px标签栏 + 8px边距 */
+  border: 1px solid var(--border-color);
+  background-color: var(--background-color);
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  margin: 8px;
+}
+
+.wujie-container-mdi.active {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  transform: translateY(-2px);
+}
+
+/* MDI窗口标题栏 */
+.mdi-window-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 16px;
+  background-color: var(--primary-color);
+  color: white;
+  cursor: move;
+}
+
+.mdi-window-title {
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.mdi-window-close {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 20px;
+  cursor: pointer;
+  opacity: 0.8;
+  transition: opacity 0.2s;
+}
+
+.mdi-window-close:hover {
+  opacity: 1;
+}
+
+/* MDI窗口内容区 */
+.mdi-window-content {
+  flex: 1;
+  overflow: hidden;
+  background-color: var(--background-color);
+}
+
+.no-mdi-apps {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: var(--text-color);
+  opacity: 0.6;
+}
+
+.no-mdi-apps p {
+  margin-bottom: 20px;
+  font-size: 18px;
+}
+
+.open-app-btn {
+  padding: 8px 16px;
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.open-app-btn:hover {
+  opacity: 0.9;
+  transform: translateY(-2px);
+}
+
+/* 暗黑主题适配 */
+:root[data-theme="dark"] .mdi-container {
+  background-color: var(--background-color);
+}
+
+:root[data-theme="dark"] .wujie-container-mdi {
+  border-color: var(--border-color);
+  background-color: rgba(255, 255, 255, 0.03);
+}
+
+/* MDI标签栏 */
+.mdi-tabs {
+  position: sticky;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 40px;
+  background-color: var(--background-color);
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  padding: 0 4px;
+  gap: 0;
+  z-index: 2;
+  overflow-x: auto;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.mdi-tab-home {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  height: 32px;
+  padding: 0 12px;
+  border: none;
+  background-color: transparent;
+  color: var(--text-color);
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 13px;
+  transition: all 0.2s;
+  white-space: nowrap;
+  margin-right: 4px;
+}
+
+.mdi-tab-home:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.mdi-tab-divider {
+  width: 1px;
+  height: 24px;
+  background-color: var(--border-color);
+  margin: 0 8px;
+}
+
+.mdi-tab-list {
+  display: flex;
+  gap: 2px;
+  overflow-x: auto;
+  height: 100%;
+  align-items: center;
+  padding: 4px 0;
+}
+
+.mdi-tab {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 32px;
+  padding: 0 12px;
+  border: none;
+  background-color: rgba(0, 0, 0, 0.03);
+  color: var(--text-color);
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 13px;
+  transition: all 0.2s;
+  white-space: nowrap;
+  min-width: 120px;
+}
+
+.mdi-tab.active {
+  background-color: var(--primary-color);
+  color: white;
+}
+
+.mdi-tab:hover {
+  background-color: var(--primary-color);
+  color: white;
+  opacity: 0.9;
+}
+
+.mdi-tab-title {
+  flex: 1;
+  text-align: left;
+  font-weight: 500;
+}
+
+.mdi-tab-close {
+  font-size: 16px;
+  opacity: 0.7;
+  transition: opacity 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  margin-left: 4px;
+}
+
+.mdi-tab-close:hover {
+  opacity: 1;
+  background-color: rgba(0, 0, 0, 0.1);
+}
+
+/* 暗黑主题适配 */
+:root[data-theme="dark"] .mdi-tab-home:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+:root[data-theme="dark"] .mdi-tab {
+  background-color: rgba(255, 255, 255, 0.03);
+}
+
+:root[data-theme="dark"] .mdi-tab-close:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* 滚动条美化 */
+.mdi-tab-list::-webkit-scrollbar {
+  height: 0;
+}
+
+.mdi-tabs::-webkit-scrollbar {
+  height: 0;
+}
+
+/* 路由页面头部 */
+.route-header {
+  margin-bottom: 20px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.return-to-mdi {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border: none;
+  background-color: var(--primary-color);
+  color: white;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.2s;
+}
+
+.return-to-mdi:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* 暗黑主题适配 */
+:root[data-theme="dark"] .route-header {
+  border-color: var(--border-color);
 }
 </style>

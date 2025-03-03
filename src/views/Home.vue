@@ -1,7 +1,13 @@
 <template>
   <div class="home">
     <div class="home-header">
-      <h1>首页</h1>
+      <div class="header-left">
+        <h1>首页</h1>
+        <button v-if="store.mdiApps.length > 0" class="return-to-mdi" @click="returnToMdi">
+          <i class="nav-icon">📱</i>
+          返回工作区 ({{ store.mdiApps.length }}个应用)
+        </button>
+      </div>
       <!-- 主题切换按钮 -->
       <button @click="toggleTheme" class="theme-toggle">
         {{ store.currentTheme === 'light' ? '🌙' : '☀️' }}
@@ -118,6 +124,11 @@ const openAppManager = () => {
 const toggleTheme = () => {
   store.toggleTheme()
 }
+
+// 返回MDI工作区
+const returnToMdi = () => {
+  window.dispatchEvent(new CustomEvent('return-to-mdi'))
+}
 </script>
 
 <style scoped>
@@ -137,10 +148,26 @@ const toggleTheme = () => {
   margin-bottom: 20px;
 }
 
+.header-left {
+  display: flex;
+  align-items: center;
+}
+
 h1 {
   font-size: 1.8rem;
   color: var(--text-color);
   margin: 0;
+}
+
+.return-to-mdi {
+  background-color: transparent;
+  border: none;
+  padding: 0;
+  font: inherit;
+  cursor: pointer;
+  outline: inherit;
+  color: var(--text-color);
+  margin-left: 10px;
 }
 
 .theme-toggle {

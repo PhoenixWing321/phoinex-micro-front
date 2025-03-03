@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
-import type { FrameworkState, UserInfo, SubApp, MenuItem, OpenMode } from '../types/framework'
+import type { SubApp, MenuItem, OpenMode, SystemMessage, UserInfo, FrameworkState } from '../types/framework'
+import axios from 'axios'
 
 // 定义框架级别的store
 export const useFrameworkStore = defineStore('framework', {
@@ -15,7 +16,7 @@ export const useFrameworkStore = defineStore('framework', {
     
     // 微前端相关
     subApps: [], // 子应用列表
-    currentApp: null, // 当前激活的子应用
+    currentAppName: null, // 当前激活的子应用
     showDrawer: false, // 是否显示应用抽屉
     
     // 系统状态
@@ -24,8 +25,9 @@ export const useFrameworkStore = defineStore('framework', {
     
     // 配置相关
     configLoaded: false, // 配置是否已加载
-    mainMenu: [] as MenuItem[], // 主菜单配置
-    openModes: [] as OpenMode[], // 打开方式配置
+    mainMenu: [], // 主菜单配置
+    openModes: [], // 打开方式配置
+    mdiApps: [], // 添加MDI应用列表
   }),
   
   // getters
@@ -36,14 +38,12 @@ export const useFrameworkStore = defineStore('framework', {
     // 判断是否是管理员
     isAdmin: (state): boolean => state.userInfo?.role === 'admin',
     
-    // 获取当前激活的子应用名称
-    currentAppName: (state): string => state.currentApp?.name || '',
+    // 获取当前激活的子应用名称 - 重命名以避免与state冲突
+    activeAppName: (state): string => state.currentAppName || '',
     
     // 获取排序后的主菜单
     sortedMainMenu: (state): MenuItem[] => {
-      // 确保mainMenu是数组
-      const menu = state.mainMenu || [];
-      return [...menu].sort((a, b) => a.order - b.order);
+      return [...state.mainMenu].sort((a, b) => (a.order || 0) - (b.order || 0));
     },
     
     // 获取默认的打开方式
@@ -51,6 +51,10 @@ export const useFrameworkStore = defineStore('framework', {
       // 确保openModes是数组
       const modes = state.openModes || [];
       return modes.find(mode => mode.isDefault === true);
+    },
+    
+    currentApp: (state): SubApp | null => {
+      return state.subApps.find(app => app.name === state.currentAppName) || null;
     },
   },
   
@@ -64,14 +68,18 @@ export const useFrameworkStore = defineStore('framework', {
     // 切换主题
     toggleTheme() {
       this.currentTheme = this.currentTheme === 'light' ? 'dark' : 'light'
-      // 更新根元素的data-theme属性
-      document.documentElement.setAttribute('data-theme', this.currentTheme)
+      this.initTheme()
     },
     
     // 设置用户信息并登录
-    login(userInfo: UserInfo): void {
+    setUserInfo(userInfo: UserInfo | null): void {
       this.userInfo = userInfo
-      this.isLoggedIn = true
+      this.isLoggedIn = !!userInfo
+    },
+    
+    // 添加登录方法
+    login(userInfo: UserInfo): void {
+      this.setUserInfo(userInfo)
     },
     
     // 登出
@@ -82,19 +90,20 @@ export const useFrameworkStore = defineStore('framework', {
     
     // 注册子应用
     registerSubApp(app: SubApp): void {
-      if (!this.subApps.find(a => a.name === app.name)) {
+      // 检查应用是否已存在
+      const existingAppIndex = this.subApps.findIndex(a => a.name === app.name)
+      if (existingAppIndex >= 0) {
+        // 更新现有应用
+        this.subApps[existingAppIndex] = app
+      } else {
+        // 添加新应用
         this.subApps.push(app)
       }
     },
     
     // 激活子应用
-    activateApp(appName: string): boolean {
-      const app = this.subApps.find(a => a.name === appName)
-      if (app) {
-        this.currentApp = app
-        return true
-      }
-      return false
+    activateApp(appName: string): void {
+      this.currentAppName = appName
     },
     
     // 设置全局加载状态
@@ -103,13 +112,22 @@ export const useFrameworkStore = defineStore('framework', {
     },
     
     // 添加系统消息
-    addSystemMessage(message: string): void {
-      this.systemMessages.push({
-        id: Date.now(),
-        content: message,
-        timestamp: new Date().toISOString(),
-        read: false
-      })
+    addSystemMessage(text: string, type: 'info' | 'error' | 'success' = 'info'): void {
+      const id = Date.now()
+      this.systemMessages.push({ id, text, type })
+      
+      // 2.5秒后自动移除消息
+      setTimeout(() => {
+        this.removeSystemMessage(id)
+      }, 2500)
+    },
+    
+    // 移除系统消息 - 添加缺失的方法
+    removeSystemMessage(messageId: number): void {
+      const index = this.systemMessages.findIndex(m => m.id === messageId)
+      if (index >= 0) {
+        this.systemMessages.splice(index, 1)
+      }
     },
     
     // 标记消息为已读
@@ -127,10 +145,8 @@ export const useFrameworkStore = defineStore('framework', {
     
     // 初始化主题
     initTheme(): void {
-      // 确保DOM加载后再设置主题
-      if (document && document.documentElement) {
-        document.documentElement.setAttribute('data-theme', this.currentTheme)
-      }
+      // 将主题应用到DOM
+      document.documentElement.setAttribute('data-theme', this.currentTheme)
     },
     
     // 设置抽屉显示状态
@@ -160,41 +176,37 @@ export const useFrameworkStore = defineStore('framework', {
       
       try {
         this.setLoading(true);
-        const response = await fetch('/config.json');
+        const response = await axios.get('/config.json');
         
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        
-        const config = await response.json();
+        const config = response.data;
         
         // 加载默认应用
-        if (this.subApps.length === 0 && config.defaultApps) {
+        if (config.defaultApps && Array.isArray(config.defaultApps)) {
           config.defaultApps.forEach((app: SubApp) => {
             this.registerSubApp(app);
           });
           
-          // 如果有应用，默认激活第一个
-          if (this.subApps.length > 0 && !this.currentApp) {
-            this.activateApp(this.subApps[0].name);
+          // 如果有应用但没有激活的应用，则激活第一个
+          if (this.subApps.length > 0 && !this.currentAppName) {
+            this.currentAppName = this.subApps[0].name;
           }
         }
         
         // 加载主菜单配置
-        if (config.mainMenu) {
+        if (config.mainMenu && Array.isArray(config.mainMenu)) {
           this.mainMenu = config.mainMenu;
         }
         
         // 加载打开方式配置
-        if (config.openModes) {
+        if (config.openModes && Array.isArray(config.openModes)) {
           this.openModes = config.openModes;
         }
         
         this.configLoaded = true;
-        this.addSystemMessage('配置加载成功');
+        this.addSystemMessage('配置加载成功', 'success');
       } catch (error) {
         console.error('加载配置文件失败:', error);
-        this.addSystemMessage('加载配置文件失败，请检查网络连接');
+        this.addSystemMessage('加载配置文件失败，请检查网络连接', 'error');
       } finally {
         this.setLoading(false);
       }
@@ -203,22 +215,39 @@ export const useFrameworkStore = defineStore('framework', {
     // 删除应用
     removeApp(appName: string): void {
       const index = this.subApps.findIndex(app => app.name === appName);
-      if (index !== -1) {
-        // 如果删除的是当前激活的应用，则需要重新激活其他应用
-        if (this.currentApp && this.currentApp.name === appName) {
-          this.currentApp = null;
-          // 如果还有其他应用，则激活第一个
-          if (this.subApps.length > 1) {
-            const nextApp = this.subApps.find(app => app.name !== appName);
-            if (nextApp) {
-              this.activateApp(nextApp.name);
-            }
-          }
+      if (index >= 0) {
+        // 如果删除的是当前激活的应用，则清除当前应用
+        if (this.currentAppName === appName) {
+          this.currentAppName = this.subApps.length > 0 ? this.subApps[0].name : null;
         }
         
         // 删除应用
         this.subApps.splice(index, 1);
-        this.addSystemMessage(`应用 ${appName} 已删除`);
+        this.addSystemMessage(`应用 ${appName} 已删除`, 'info');
+        
+        // 如果删除的是MDI应用，也从MDI应用列表中移除
+        this.removeMdiApp(appName);
+      }
+    },
+    
+    // 添加MDI应用
+    addMdiApp(app: SubApp) {
+      // 检查应用是否已在MDI列表中
+      const existingAppIndex = this.mdiApps.findIndex(a => a.name === app.name)
+      if (existingAppIndex >= 0) {
+        // 更新现有应用
+        this.mdiApps[existingAppIndex] = app
+      } else {
+        // 添加新应用
+        this.mdiApps.push(app)
+      }
+    },
+    
+    // 从MDI列表中移除应用
+    removeMdiApp(appName: string) {
+      const index = this.mdiApps.findIndex(app => app.name === appName)
+      if (index >= 0) {
+        this.mdiApps.splice(index, 1)
       }
     },
   },
@@ -227,6 +256,6 @@ export const useFrameworkStore = defineStore('framework', {
   persist: {
     key: 'framework-store',
     storage: localStorage,
-    paths: ['currentTheme', 'sidebarCollapsed', 'userInfo', 'isLoggedIn', 'subApps', 'currentApp', 'showDrawer', 'mainMenu', 'openModes']
+    paths: ['currentTheme', 'sidebarCollapsed', 'userInfo', 'isLoggedIn', 'subApps', 'currentAppName', 'showDrawer', 'mainMenu', 'openModes', 'mdiApps']
   }
 }) 

@@ -21,8 +21,9 @@ const handleLogin = (): void => {
   // 实际应用中这里会有登录逻辑
   store.login({
     username: '测试用户',
-    role: 'user',
-    id: 1
+    name: '测试用户',
+    avatar: 'https://via.placeholder.com/50',
+    role: 'user'
   })
   store.addSystemMessage('登录成功！')
 }

@@ -4,19 +4,25 @@
       "name": "百度",
       "entry": "https://www.baidu.com",
       "container": "baidu-container",
-      "openMode": "drawer"
+      "openMode": "mdi"
+    },
+    {
+      "name": "关于-app",
+      "entry": "/about",
+      "container": "about-container",
+      "openMode": "mdi"
     },
     {
       "name": "CSDN",
       "entry": "https://www.csdn.net",
       "container": "csdn-container",
-      "openMode": "blank"
+      "openMode": "mdi"
     },
     {
       "name": "Gitee",
       "entry": "https://gitee.com",
       "container": "gitee-container",
-      "openMode": "mdi"
+      "openMode": "blank"
     }
   ],
   "mainMenu": [
@@ -26,7 +32,7 @@
       "icon": "🏠",
       "type": "route",
       "path": "/",
-      "openMode": "mdi",
+      "openMode": "",
       "order": 1
     },
     {
