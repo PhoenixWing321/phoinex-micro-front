@@ -203,9 +203,18 @@ const openAppInMdi = (app: SubApp) => {
     url: app.entry,
     exec: true,
     alive: true,
-    el: `#${app.container}`,
+    el: `#${app.container} .mdi-window-content`,
     degrade: false,
-    fetch: (url, options) => {
+    plugins: [
+      {
+        cssExcludes: [
+          'https://g.csdnimg.cn/static/logo/favicon32.ico',
+          'https://g.csdnimg.cn/static/logo/favicon64.ico',
+          'https://g.csdnimg.cn/static/logo/favicon128.ico'
+        ]
+      }
+    ],
+    fetch: (url: string, options: any) => {
       // 处理跨域问题
       if (url.includes('baidu.com') || url.includes('http://')) {
         return window.fetch(url, {
@@ -601,6 +610,11 @@ nav a.router-link-active,
   flex-direction: column;
   background-color: var(--background-color);
   overflow: hidden;
+  background-image: 
+    linear-gradient(rgba(130, 130, 130, 0.1) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(130, 130, 130, 0.1) 1px, transparent 1px);
+  background-size: 20px 20px;
+  background-position: -1px -1px;
 }
 
 /* MDI标签栏 */
@@ -712,6 +726,9 @@ nav a.router-link-active,
 /* 暗黑主题适配 */
 :root[data-theme="dark"] .mdi-container {
   background-color: var(--background-color);
+  background-image: 
+    linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
 }
 
 :root[data-theme="dark"] .wujie-container-mdi {
