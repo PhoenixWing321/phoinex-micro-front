@@ -10,12 +10,14 @@
         @update:stroke-width="strokeWidth = $event"
       />
     </div>
-    <div class="canvas-container">
-      <Canvas
-        :active-tool="activeTool"
-        :stroke-color="strokeColor"
-        :stroke-width="strokeWidth"
-      />
+    <div class="main-content">
+      <div class="canvas-container">
+        <Canvas
+          :active-tool="activeTool"
+          :stroke-color="strokeColor"
+          :stroke-width="strokeWidth"
+        />
+      </div>
     </div>
   </div>
 </template>
@@ -27,7 +29,7 @@ import Toolbar from './components/Toolbar.vue'
 import type { DrawingTool } from './types/drawing'
 
 // 当前选中的工具
-const activeTool = ref<DrawingTool>('pencil')
+const activeTool = ref<DrawingTool>('line')
 // 画笔颜色
 const strokeColor = ref('#000000')
 // 画笔宽度
@@ -40,11 +42,8 @@ const strokeWidth = ref(2)
   height: 100vh;
   display: flex;
   background-color: var(--background-color);
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  padding: 20px;
+  gap: 20px;
 }
 
 .toolbar {
@@ -55,12 +54,21 @@ const strokeWidth = ref(2)
   z-index: 1;
 }
 
-.canvas-container {
+.main-content {
   flex: 1;
   height: 100%;
+  display: flex;
+  gap: 20px;
+}
+
+.canvas-container {
+  width: calc(100% - 220px);  /* 减去历史面板的宽度 */
+  height: 600px;  /* 固定画板高度 */
   overflow: hidden;
   position: relative;
-  display: flex;
-  flex-direction: column;
+  background-color: white;
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 </style> 

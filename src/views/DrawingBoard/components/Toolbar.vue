@@ -9,7 +9,7 @@
         :title="tool.title"
         @click="$emit('update:active-tool', tool.name)"
       >
-        {{ tool.icon }}
+        <span class="material-symbols-rounded">{{ tool.icon }}</span>
       </button>
     </div>
     
@@ -56,12 +56,11 @@ defineEmits<{
 }>()
 
 const tools = computed<ToolbarItem[]>(() => [
-  { name: 'pencil', icon: '✏️', title: '铅笔' },
-  { name: 'line', icon: '📏', title: '直线' },
-  { name: 'rect', icon: '⬜', title: '矩形' },
-  { name: 'circle', icon: '⭕', title: '圆形' },
-  { name: 'eraser', icon: '🧹', title: '橡皮擦' },
-  { name: 'text', icon: '📝', title: '文字' },
+  { name: 'line', icon: 'horizontal_rule', title: '直线' },
+  { name: 'rect', icon: 'rectangle', title: '矩形' },
+  { name: 'circle', icon: 'circle', title: '圆形' },
+  { name: 'text', icon: 'text_fields', title: '文字' },
+  { name: 'image', icon: 'image', title: '加载示例图片' },
 ])
 </script>
 
@@ -134,5 +133,22 @@ const tools = computed<ToolbarItem[]>(() => [
 .stroke-width input {
   width: 100%;
   cursor: pointer;
+}
+
+.tool-btn .material-symbols-rounded {
+  font-size: 24px;
+  font-variation-settings:
+    'FILL' 0,
+    'wght' 400,
+    'GRAD' 0,
+    'opsz' 24;
+}
+
+.tool-btn.active .material-symbols-rounded {
+  font-variation-settings:
+    'FILL' 1,
+    'wght' 400,
+    'GRAD' 0,
+    'opsz' 24;
 }
 </style> 
