@@ -66,7 +66,33 @@
             <span class="mdi-window-title">{{ app.name }}</span>
             <button class="mdi-window-close" @click="closeMdiApp(app.name)">×</button>
           </div>
-          <div class="mdi-window-content"></div>
+          <div class="mdi-window-content">
+            <WujieVue
+              v-if="app.name === store.currentAppName"
+              :width="'100%'"
+              :height="'100%'"
+              :name="app.name"
+              :url="getAppUrl(app.entry)"
+              :sync="true"
+              :degrade="true"
+              :fetch="fetch"
+              :props="{
+                jump: (name) => {
+                  activateApp(name)
+                }
+              }"
+              :plugins="[{
+                cssExcludes: [
+                  'https://g.csdnimg.cn/static/logo/favicon32.ico',
+                  'https://g.csdnimg.cn/static/logo/favicon64.ico',
+                  'https://g.csdnimg.cn/static/logo/favicon128.ico'
+                ]
+              }]"
+              @mounted="handleAppMounted"
+              @unmounted="handleAppUnmounted"
+              @error="handleAppError"
+            />
+          </div>
         </div>
         
         <!-- 无应用时的提示 -->
@@ -115,7 +141,7 @@ import WujieVue from 'wujie-vue3'
 const router = useRouter()
 const route = useRoute()
 
-const { setupApp } = WujieVue
+const { bus } = WujieVue
 
 const store = useFrameworkStore()
 const drawerType = ref<'app-manager' | 'wujie-app' | 'route' | null>(null)
@@ -183,49 +209,46 @@ const openAppInDrawer = (app: SubApp) => {
   openAppInMdi(app)
 }
 
+// 获取应用完整URL
+const getAppUrl = (entry: string) => {
+  if (entry.startsWith('/') && !entry.startsWith('//')) {
+    return `${window.location.origin}${entry}`
+  }
+  return entry
+}
+
+// 应用生命周期处理函数
+const handleAppMounted = (data: any) => {
+  console.log('子应用已挂载:', data)
+}
+
+const handleAppUnmounted = () => {
+  console.log('子应用已卸载')
+}
+
+const handleAppError = (error: any) => {
+  console.error('子应用错误:', error)
+  store.addSystemMessage(`应用加载失败：${error.message}`, 'error')
+}
+
 // 在MDI中打开应用
-const openAppInMdi = (app: SubApp) => {
+const openAppInMdi = async (app: SubApp) => {
+  console.log('开始加载应用:', app)
+  
   // 显示MDI容器
   showMdiContainer.value = true
+  console.log('MDI容器显示状态:', showMdiContainer.value)
   
   // 添加到MDI应用列表
   store.addMdiApp(app)
+  console.log('当前MDI应用列表:', store.mdiApps)
   
   // 激活应用
   store.activateApp(app.name)
+  console.log('当前激活的应用:', store.currentAppName)
   
   // 关闭抽屉
   closeDrawer()
-  
-  // 使用无界微前端加载应用
-  setupApp({
-    name: app.name,
-    url: app.entry,
-    exec: true,
-    alive: true,
-    el: `#${app.container} .mdi-window-content`,
-    degrade: false,
-    plugins: [
-      {
-        cssExcludes: [
-          'https://g.csdnimg.cn/static/logo/favicon32.ico',
-          'https://g.csdnimg.cn/static/logo/favicon64.ico',
-          'https://g.csdnimg.cn/static/logo/favicon128.ico'
-        ]
-      }
-    ],
-    fetch: (url: string, options: any) => {
-      // 处理跨域问题
-      if (url.includes('baidu.com') || url.includes('http://')) {
-        return window.fetch(url, {
-          ...options,
-          mode: 'no-cors',
-          credentials: 'omit'
-        });
-      }
-      return window.fetch(url, options);
-    }
-  })
 }
 
 // 关闭抽屉
@@ -320,6 +343,33 @@ const returnToMdi = () => {
 const activateApp = (appName: string) => {
   store.activateApp(appName)
 }
+
+// 添加 fetch 函数
+const fetch = (url: string, options: any = {}) => {
+  const defaultOptions = {
+    mode: 'cors',
+    credentials: 'include',
+    headers: {}
+  };
+
+  const mergedOptions = {
+    ...defaultOptions,
+    ...options,
+    headers: {
+      ...defaultOptions.headers,
+      ...options.headers
+    }
+  };
+  
+  return window.fetch(url, mergedOptions).catch(error => {
+    console.warn('Fetch failed, trying no-cors mode:', error);
+    return window.fetch(url, {
+      ...mergedOptions,
+      mode: 'no-cors',
+      credentials: 'omit'
+    });
+  });
+};
 </script>
 
 <style>
@@ -691,6 +741,16 @@ nav a.router-link-active,
   flex: 1;
   overflow: hidden;
   background-color: var(--background-color);
+  position: relative;
+}
+
+.wujie-iframe-container,
+.wujie-shadow-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
 }
 
 .no-mdi-apps {
