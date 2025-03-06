@@ -28,9 +28,17 @@ const routes: Array<RouteRecordRaw> = [
   {
     path: '/drawing-board',
     name: 'DrawingBoard',
-    component: () => import('../views/DrawingBoard/index.vue'),
+    component: () => import('../views/drawing-board/index.vue'),
     meta: {
       title: '画板'
+    }
+  },
+  {
+    path: '/excalidraw',
+    name: 'Excalidraw',
+    component: () => import('../excalidraw/index.vue'),
+    meta: {
+      title: 'Excalidraw'
     }
   }
 ]

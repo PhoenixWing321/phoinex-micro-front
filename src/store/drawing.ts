@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import type { DrawingTool, DrawingHistoryItem } from '@/views/DrawingBoard/types/drawing'
+import type { DrawingTool, DrawingHistoryItem } from '@/views/drawing-board/types/drawing'
 
 interface DrawingState {
   activeTool: DrawingTool

@@ -54,13 +54,22 @@
       "order": 3
     },
     {
+      "id": "excalidraw", 
+      "name": "Excalidraw",
+      "icon": "🎨", 
+      "type": "rote",
+      "path": "/excalidraw",
+      "openMode": "route",
+      "order": 4
+    },
+    {
       "id": "about",
       "name": "关于",
       "icon": "ℹ️",
       "type": "route",
       "path": "/about",
       "openMode": "drawer",
-      "order": 4
+      "order": 5
     }
   ],
   "openModes": [

@@ -9,9 +9,12 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@excalidraw/excalidraw": "^0.17.6",
     "axios": "^1.8.1",
     "pinia": "^2.1.7",
     "pinia-plugin-persistedstate": "^3.2.1",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
     "vue": "^3.4.15",
     "vue-router": "^4.5.0",
     "wujie-vue3": "^1.0.25"
